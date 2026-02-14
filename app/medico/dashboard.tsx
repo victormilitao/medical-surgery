@@ -1,17 +1,53 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Plus, Search } from 'lucide-react-native';
+import { useMemo } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { PatientListItem, PatientStatus } from '../../components/doctor/PatientListItem';
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { usePatientsByDoctor } from '../../hooks/usePatients';
+
+interface Patient {
+    id: string;
+    name: string;
+    surgeryDate: string;
+    day: number;
+    status: PatientStatus;
+    lastUpdate: string;
+    alerts?: string[];
+}
 
 export default function DoctorDashboard() {
     const router = useRouter();
-    const { session, isLoading, isDoctor, signOut } = useAuth();
+    const { session, isLoading: isAuthLoading, isDoctor, signOut, profile } = useAuth();
 
-    if (isLoading) return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
+    // Use React Query hook
+    const { data: patientsData, isLoading: isPatientsLoading } = usePatientsByDoctor(profile?.id);
+
+    if (isAuthLoading) return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
     if (!session || !isDoctor) return <Redirect href="/" />;
+
+    // Transform data for UI
+    const patients = useMemo<Patient[]>(() => {
+        if (!patientsData) return [];
+
+        return patientsData.map((p) => {
+            const surgeryDate = new Date(p.surgery_date || new Date());
+            const today = new Date();
+            const daysSinceSurgery = Math.floor((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            return {
+                id: p.id,
+                name: p.profile?.full_name || 'Sem nome',
+                surgeryDate: surgeryDate.toLocaleDateString('pt-BR'),
+                day: daysSinceSurgery + 1,
+                status: p.status as PatientStatus,
+                lastUpdate: new Date(p.updated_at || p.created_at || new Date()).toLocaleDateString('pt-BR'),
+                alerts: p.status === 'critical' ? ['Requer atenção'] : p.status === 'warning' ? ['Monitorar'] : undefined
+            };
+        });
+    }, [patientsData]);
 
     const handleLogout = async () => {
         await signOut();
@@ -20,44 +56,6 @@ export default function DoctorDashboard() {
     const handlePatientClick = (name: string) => {
         console.log(`Open patient: ${name}`);
     };
-
-    // Mock data
-    const patients = [
-        {
-            id: '1',
-            name: 'Maria Silva Santos',
-            surgeryDate: '05/01/2026',
-            day: 3,
-            status: 'critical' as PatientStatus,
-            lastUpdate: 'Hoje às 08:30',
-            alerts: ['Inspeção do sítio cirúrgico (suspeita)', 'Febre > 38°C']
-        },
-        {
-            id: '2',
-            name: 'João Pereira',
-            surgeryDate: '04/01/2026',
-            day: 4,
-            status: 'warning' as PatientStatus,
-            lastUpdate: 'Ontem às 18:00',
-            alerts: ['Dor intensa']
-        },
-        {
-            id: '3',
-            name: 'Ana Costa',
-            surgeryDate: '02/01/2026',
-            day: 6,
-            status: 'stable' as PatientStatus,
-            lastUpdate: 'Hoje às 09:15',
-        },
-        {
-            id: '4',
-            name: 'Carlos Oliveira',
-            surgeryDate: '28/12/2025',
-            day: 11,
-            status: 'stable' as PatientStatus,
-            lastUpdate: 'Hoje às 10:00',
-        },
-    ];
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -68,7 +66,7 @@ export default function DoctorDashboard() {
                 <View className="flex-row justify-between items-center mb-4">
                     <View>
                         <Text className="text-gray-500 text-sm">Bem-vindo, Doutor</Text>
-                        <Text className="text-2xl font-bold text-gray-900">Dr. Ricardo</Text>
+                        <Text className="text-2xl font-bold text-gray-900">{profile?.full_name || 'Dr. Ricardo'}</Text>
                     </View>
                     <Button
                         title="Sair"
@@ -92,18 +90,24 @@ export default function DoctorDashboard() {
                 <StatsGrid />
 
                 <Text className="text-lg font-bold text-gray-900 mb-2 mt-2">Pacientes em Acompanhamento</Text>
-                {patients.map(patient => (
-                    <PatientListItem
-                        key={patient.id}
-                        name={patient.name}
-                        surgeryDate={patient.surgeryDate}
-                        day={patient.day}
-                        status={patient.status}
-                        lastUpdate={patient.lastUpdate}
-                        alerts={patient.alerts}
-                        onPress={() => handlePatientClick(patient.name)}
-                    />
-                ))}
+                {isPatientsLoading ? (
+                    <Text className="text-gray-500 text-center py-4">Carregando pacientes...</Text>
+                ) : patients.length === 0 ? (
+                    <Text className="text-gray-500 text-center py-4">Nenhum paciente encontrado</Text>
+                ) : (
+                    patients.map(patient => (
+                        <PatientListItem
+                            key={patient.id}
+                            name={patient.name}
+                            surgeryDate={patient.surgeryDate}
+                            day={patient.day}
+                            status={patient.status}
+                            lastUpdate={patient.lastUpdate}
+                            alerts={patient.alerts}
+                            onPress={() => handlePatientClick(patient.name)}
+                        />
+                    ))
+                )}
             </ScrollView>
 
             {/* FAB - Floating Action Button */}
