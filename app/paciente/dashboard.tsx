@@ -6,26 +6,33 @@ import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { usePatientDashboard } from '../../hooks/usePatientDashboard';
 
 export default function PatientDashboard() {
     const router = useRouter();
-    const { session, isLoading, isPatient, signOut } = useAuth();
+    const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
 
-    if (isLoading) return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
+    // Fetch patient dashboard data
+    const { data: dashboardData, isLoading: isDashboardLoading } = usePatientDashboard(profile?.id);
+
+    if (isAuthLoading || isDashboardLoading) {
+        return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
+    }
+
     if (!session || !isPatient) return <Redirect href="/" />;
-
-    // Mock data
-    const patientData = {
-        name: "Ana Maria",
-        surgery: "Colecistectomia Videolaparoscópica",
-        date: "06/01/2026",
-        currentDay: 1,
-        totalDays: 14
-    };
 
     const handleLogout = async () => {
         await signOut();
     };
+
+    // Use real data or defaults
+    const patientName = dashboardData?.profile.full_name || 'Paciente';
+    const surgeryType = dashboardData?.currentSurgery?.surgery_type || 'Nenhuma cirurgia registrada';
+    const surgeryDate = dashboardData?.currentSurgery?.surgery_date
+        ? new Date(dashboardData.currentSurgery.surgery_date).toLocaleDateString('pt-BR')
+        : 'N/A';
+    const currentDay = dashboardData?.daysSinceSurgery || 0;
+    const totalDays = dashboardData?.totalRecoveryDays || 14;
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -42,18 +49,31 @@ export default function PatientDashboard() {
                         />
                     </View>
                     <WelcomeHeader
-                        patientName={patientData.name}
-                        surgeryType={patientData.surgery}
-                        surgeryDate={patientData.date}
+                        patientName={patientName}
+                        surgeryType={surgeryType}
+                        surgeryDate={surgeryDate}
                     />
                 </View>
 
                 {/* Progress Section */}
-                <View className="px-6 mb-8">
-                    <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <ProgressBar currentDay={patientData.currentDay} totalDays={patientData.totalDays} />
+                {dashboardData?.currentSurgery && (
+                    <View className="px-6 mb-8">
+                        <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <ProgressBar currentDay={currentDay} totalDays={totalDays} />
+                        </View>
                     </View>
-                </View>
+                )}
+
+                {/* No Surgery Message */}
+                {!dashboardData?.currentSurgery && (
+                    <View className="px-6 mb-8">
+                        <View className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                            <Text className="text-yellow-800 text-center">
+                                Você ainda não tem uma cirurgia registrada. Entre em contato com seu médico.
+                            </Text>
+                        </View>
+                    </View>
+                )}
 
                 {/* Menu Section */}
                 <View className="px-6">
@@ -63,7 +83,7 @@ export default function PatientDashboard() {
                         // @ts-ignore
                         icon={Calendar}
                         onPress={() => console.log('Timeline')}
-                        actionLabel={`Dia ${patientData.currentDay}`}
+                        actionLabel={dashboardData?.currentSurgery ? `Dia ${currentDay + 1}` : undefined}
                     />
                     <ActionMenuItem
                         title="Questionário de Hoje"
