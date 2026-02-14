@@ -1,0 +1,82 @@
+import { ChevronRight } from 'lucide-react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Badge } from '../ui/Badge';
+import { Card } from '../ui/Card';
+
+export type PatientStatus = 'critical' | 'warning' | 'stable' | 'finished';
+
+interface PatientListItemProps {
+    name: string;
+    surgeryDate: string;
+    day: number;
+    status: PatientStatus;
+    lastUpdate: string;
+    alerts?: string[];
+    onPress: () => void;
+}
+
+export function PatientListItem({
+    name,
+    surgeryDate,
+    day,
+    status,
+    lastUpdate,
+    alerts = [],
+    onPress
+}: PatientListItemProps) {
+
+    let statusColor = '#22c55e'; // green
+    let statusLabel = 'Estável';
+    let badgeVariant: 'default' | 'critical' | 'warning' | 'success' = 'default';
+
+    if (status === 'critical') {
+        statusColor = '#ef4444'; // red
+        statusLabel = 'Crítico';
+        badgeVariant = 'critical';
+    } else if (status === 'warning') {
+        statusColor = '#eab308'; // yellow
+        statusLabel = 'Atenção';
+        badgeVariant = 'warning';
+    } else if (status === 'finished') {
+        statusColor = '#3b82f6'; // blue
+        statusLabel = 'Finalizado';
+        badgeVariant = 'success';
+    } else {
+        badgeVariant = 'success'; // stable is green
+    }
+
+    return (
+        <TouchableOpacity onPress={onPress}>
+            <Card className="mb-3 border-l-4" style={{ borderLeftColor: statusColor }}>
+                <View className="flex-row justify-between items-start mb-2">
+                    <View>
+                        <Text className="text-gray-900 font-bold text-lg">{name}</Text>
+                        <Text className="text-gray-500 text-sm">Cirurgia: {surgeryDate}</Text>
+                    </View>
+                    <Badge label={`Dia ${day}`} variant="default" />
+                </View>
+
+                {alerts.length > 0 && (
+                    <View className="bg-red-50 p-2 rounded-lg mb-2">
+                        {alerts.map((alert, index) => (
+                            <Text key={index} className="text-red-700 text-xs flex-row items-center">
+                                • {alert}
+                            </Text>
+                        ))}
+                    </View>
+                )}
+
+                <View className="flex-row justify-between items-center mt-1">
+                    <View className="flex-row items-center">
+                        <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
+                        <Text className="text-gray-600 text-sm">{statusLabel}</Text>
+                    </View>
+                    <View className="flex-row items-center">
+                        <Text className="text-gray-400 text-xs mr-2">Atualizado: {lastUpdate}</Text>
+                        <ChevronRight size={16} color="#9ca3af" />
+                    </View>
+                </View>
+            </Card>
+        </TouchableOpacity>
+    );
+}
