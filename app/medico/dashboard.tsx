@@ -6,7 +6,7 @@ import { PatientListItem, PatientStatus } from '../../components/doctor/PatientL
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { usePatientsByDoctor } from '../../hooks/usePatients';
+import { useSurgeriesByDoctor } from '../../hooks/useSurgeries';
 
 interface Patient {
     id: string;
@@ -22,32 +22,39 @@ export default function DoctorDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isDoctor, signOut, profile } = useAuth();
 
-    // Use React Query hook
-    const { data: patientsData, isLoading: isPatientsLoading } = usePatientsByDoctor(profile?.id);
+    // Use React Query hook for surgeries
+    const { data: surgeriesData, isLoading: isSurgeriesLoading } = useSurgeriesByDoctor(profile?.id);
 
     if (isAuthLoading) return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
     if (!session || !isDoctor) return <Redirect href="/" />;
 
-    // Transform data for UI
+    // Transform surgery data for UI
     const patients = useMemo<Patient[]>(() => {
-        if (!patientsData) return [];
+        if (!surgeriesData) return [];
 
-        return patientsData.map((p) => {
-            const surgeryDate = new Date(p.surgery_date || new Date());
+        return surgeriesData.map((surgery) => {
+            const surgeryDate = new Date(surgery.surgery_date);
             const today = new Date();
             const daysSinceSurgery = Math.floor((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
 
+            // Map surgery status to patient status
+            const patientStatus: PatientStatus =
+                surgery.status === 'completed' ? 'finished' :
+                    surgery.status === 'cancelled' ? 'stable' :
+                        daysSinceSurgery <= 3 ? 'critical' :
+                            daysSinceSurgery <= 7 ? 'warning' : 'stable';
+
             return {
-                id: p.id,
-                name: p.profile?.full_name || 'Sem nome',
+                id: surgery.patient_id,
+                name: surgery.patient?.full_name || 'Sem nome',
                 surgeryDate: surgeryDate.toLocaleDateString('pt-BR'),
                 day: daysSinceSurgery + 1,
-                status: p.status as PatientStatus,
-                lastUpdate: new Date(p.updated_at || p.created_at || new Date()).toLocaleDateString('pt-BR'),
-                alerts: p.status === 'critical' ? ['Requer atenção'] : p.status === 'warning' ? ['Monitorar'] : undefined
+                status: patientStatus,
+                lastUpdate: new Date(surgery.updated_at || surgery.created_at || new Date()).toLocaleDateString('pt-BR'),
+                alerts: patientStatus === 'critical' ? ['Requer atenção'] : patientStatus === 'warning' ? ['Monitorar'] : undefined
             };
         });
-    }, [patientsData]);
+    }, [surgeriesData]);
 
     const handleLogout = async () => {
         await signOut();
@@ -90,7 +97,7 @@ export default function DoctorDashboard() {
                 <StatsGrid />
 
                 <Text className="text-lg font-bold text-gray-900 mb-2 mt-2">Pacientes em Acompanhamento</Text>
-                {isPatientsLoading ? (
+                {isSurgeriesLoading ? (
                     <Text className="text-gray-500 text-center py-4">Carregando pacientes...</Text>
                 ) : patients.length === 0 ? (
                     <Text className="text-gray-500 text-center py-4">Nenhum paciente encontrado</Text>
