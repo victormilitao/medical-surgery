@@ -49,6 +49,7 @@ export default function DoctorDashboard() {
                 name: surgery.patient?.full_name || 'Sem nome',
                 surgeryDate: surgeryDate.toLocaleDateString('pt-BR'),
                 day: daysSinceSurgery + 1,
+                surgeryType: surgery.surgery_type?.name || 'Não especificado',
                 status: patientStatus,
                 lastUpdate: new Date(surgery.updated_at || surgery.created_at || new Date()).toLocaleDateString('pt-BR'),
                 alerts: patientStatus === 'critical' ? ['Requer atenção'] : patientStatus === 'warning' ? ['Monitorar'] : undefined

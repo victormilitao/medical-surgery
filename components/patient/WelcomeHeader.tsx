@@ -15,7 +15,7 @@ export function WelcomeHeader({ patientName, surgeryType, surgeryDate }: Welcome
             </View>
             <Text className="text-2xl font-bold text-gray-900 mb-1">Olá, {patientName}!</Text>
             <Text className="text-gray-500 text-center px-4 mb-4">
-                Estamos felizes em acompanhar sua recuperação. Você está em boas mãos.
+                Estamos acompanhando sua recuperação.
             </Text>
 
             <Card className="w-full bg-blue-50 border-blue-100">

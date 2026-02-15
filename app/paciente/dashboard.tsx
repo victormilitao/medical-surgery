@@ -27,12 +27,12 @@ export default function PatientDashboard() {
 
     // Use real data or defaults
     const patientName = dashboardData?.profile.full_name || 'Paciente';
-    const surgeryType = dashboardData?.currentSurgery?.surgery_type || 'Nenhuma cirurgia registrada';
+    const surgeryType = (dashboardData?.currentSurgery as any)?.surgery_type?.name || 'Nenhuma cirurgia registrada';
     const surgeryDate = dashboardData?.currentSurgery?.surgery_date
         ? new Date(dashboardData.currentSurgery.surgery_date).toLocaleDateString('pt-BR')
         : 'N/A';
     const currentDay = dashboardData?.daysSinceSurgery || 0;
-    const totalDays = dashboardData?.totalRecoveryDays || 14;
+    const totalDays = (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days || dashboardData?.totalRecoveryDays || 14;
 
     return (
         <View className="flex-1 bg-gray-50">

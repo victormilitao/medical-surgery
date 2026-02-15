@@ -11,7 +11,8 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .select(`
                 *,
                 patient:profiles!surgeries_patient_id_fkey(full_name, email, phone),
-                doctor:profiles!surgeries_doctor_id_fkey(full_name)
+                doctor:profiles!surgeries_doctor_id_fkey(full_name),
+                surgery_type:surgery_types(name, description, expected_recovery_days)
             `)
       .eq('doctor_id', doctorId)
       .order('surgery_date', { ascending: false });
@@ -34,7 +35,8 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .select(`
                 *,
                 patient:profiles!surgeries_patient_id_fkey(full_name, email, phone),
-                doctor:profiles!surgeries_doctor_id_fkey(full_name)
+                doctor:profiles!surgeries_doctor_id_fkey(full_name),
+                surgery_type:surgery_types(name, description, expected_recovery_days)
             `)
       .eq('id', surgeryId)
       .single();
@@ -54,7 +56,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
   async createSurgery(data: {
     doctorId: string;
     patientId: string;
-    surgeryType: string;
+    surgeryTypeId: string;
     surgeryDate: string;
     notes?: string;
   }): Promise<Surgery> {
@@ -63,7 +65,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .insert({
         doctor_id: data.doctorId,
         patient_id: data.patientId,
-        surgery_type: data.surgeryType,
+        surgery_type_id: data.surgeryTypeId,
         surgery_date: data.surgeryDate,
         notes: data.notes,
         status: 'active'

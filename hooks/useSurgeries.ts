@@ -42,7 +42,7 @@ export const useCreateSurgery = (
     {
       doctorId: string;
       patientId: string;
-      surgeryType: string;
+      surgeryTypeId: string;
       surgeryDate: string;
       notes?: string;
     }
@@ -54,7 +54,7 @@ export const useCreateSurgery = (
     {
       doctorId: string;
       patientId: string;
-      surgeryType: string;
+      surgeryTypeId: string;
       surgeryDate: string;
       notes?: string;
     }
