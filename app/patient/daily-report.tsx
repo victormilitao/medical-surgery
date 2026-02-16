@@ -1,6 +1,5 @@
 import Slider from '@react-native-community/slider';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, CheckCircle } from 'lucide-react-native';
+import { Stack, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +8,7 @@ import { QuestionWithDetails } from '../../services/types';
 
 export default function DailyReportScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { session } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -122,21 +122,23 @@ export default function DailyReportScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#00BFA5" />
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#2563EB" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white p-4 pt-12 shadow-sm flex-row items-center border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800">Relatório Diário</Text>
-      </View>
+    <View className="flex-1 bg-white">
+      <Stack.Screen
+        options={{
+          headerTitle: 'Relatório Diário',
+          headerBackButtonDisplayMode: 'minimal',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTintColor: '#374151',
+        }}
+      />
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
         <Text className="text-gray-500 mb-6 text-base">
@@ -144,7 +146,7 @@ export default function DailyReportScreen() {
         </Text>
 
         {questions.filter(shouldRenderQuestion).map((question) => (
-          <View key={question.id} className="mb-8 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <View key={question.id} className="mb-6 p-5 rounded-xl border border-gray-200">
             <Text className="text-lg font-semibold text-gray-800 mb-4">{question.text}</Text>
 
             {/* Input Types */}
@@ -164,9 +166,9 @@ export default function DailyReportScreen() {
                   step={1}
                   value={answers[question.id] ? parseInt(answers[question.id]) : 0}
                   onValueChange={(val) => handleAnswerChange(question.id, val.toString())}
-                  minimumTrackTintColor="#00BFA5"
+                  minimumTrackTintColor="#2563EB"
                   maximumTrackTintColor="#d1d5db"
-                  thumbTintColor="#00BFA5"
+                  thumbTintColor="#2563EB"
                 />
               </View>
             )}
@@ -179,12 +181,11 @@ export default function DailyReportScreen() {
                     key={option.id}
                     onPress={() => handleAnswerChange(question.id, option.value)}
                     className={`flex-1 py-3 px-4 rounded-lg flex-row justify-center items-center border ${answers[question.id] === option.value
-                      ? 'bg-teal-50 border-teal-500'
+                      ? 'bg-blue-50 border-blue-600'
                       : 'bg-gray-50 border-gray-200'
                       }`}
                   >
-                    {answers[question.id] === option.value && <CheckCircle size={16} color="#00BFA5" className="mr-2" />}
-                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-teal-700' : 'text-gray-600'}`}>
+                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-blue-700' : 'text-gray-600'}`}>
                       {option.label}
                     </Text>
                   </TouchableOpacity>
@@ -199,16 +200,16 @@ export default function DailyReportScreen() {
                   <TouchableOpacity
                     key={option.id}
                     onPress={() => handleAnswerChange(question.id, option.value)}
-                    className={`w-full py-3 px-4 rounded-lg flex-row items-center border ${answers[question.id] === option.value
-                      ? 'bg-teal-50 border-teal-500'
-                      : 'bg-white border-gray-200'
+                    className={`w-full py-3 px-4 rounded-lg flex-row items-center ${answers[question.id] === option.value
+                      ? 'bg-blue-50'
+                      : 'bg-white'
                       }`}
                   >
-                    <View className={`w-5 h-5 rounded-full border mr-3 justify-center items-center ${answers[question.id] === option.value ? 'border-teal-500' : 'border-gray-300'
+                    <View className={`w-5 h-5 rounded-full border mr-3 justify-center items-center ${answers[question.id] === option.value ? 'border-blue-600' : 'border-gray-300'
                       }`}>
-                      {answers[question.id] === option.value && <View className="w-2.5 h-2.5 rounded-full bg-teal-500" />}
+                      {answers[question.id] === option.value && <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
                     </View>
-                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-teal-700' : 'text-gray-600'}`}>
+                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-blue-700' : 'text-gray-600'}`}>
                       {option.label}
                     </Text>
                   </TouchableOpacity>
@@ -237,12 +238,13 @@ export default function DailyReportScreen() {
             )}
 
           </View>
-        ))}
+        ))
+        }
 
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={submitting}
-          className={`w-full py-4 rounded-xl items-center shadow-md mb-12 ${submitting ? 'bg-gray-400' : 'bg-[#00BFA5]'
+          className={`w-full py-4 rounded-xl items-center mb-12 ${submitting ? 'bg-gray-400' : 'bg-blue-600'
             }`}
         >
           {submitting ? (
@@ -251,7 +253,7 @@ export default function DailyReportScreen() {
             <Text className="text-white font-bold text-lg">Enviar Respostas</Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      </ScrollView >
+    </View >
   );
 }
