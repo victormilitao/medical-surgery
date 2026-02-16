@@ -39,6 +39,7 @@ export default function TimelineScreen() {
 
       if (dashboardData?.currentSurgery) {
         const sDate = new Date(dashboardData.currentSurgery.surgery_date);
+        sDate.setHours(0, 0, 0, 0); // Normalize surgery date to midnight
         setSurgeryDate(sDate);
         const recoveryDays = dashboardData.currentSurgery.surgery_type.expected_recovery_days || 14;
         const today = new Date();

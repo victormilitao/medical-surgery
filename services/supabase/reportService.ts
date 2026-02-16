@@ -1,3 +1,4 @@
+
 import { supabase } from '../../lib/supabase';
 import { DailyReport, IReportService, QuestionWithDetails } from '../types';
 
@@ -141,9 +142,11 @@ export class SupabaseReportService implements IReportService {
 
     // Map reports and attach alerts if they match the date
     return (reports || []).map(report => {
+      if (!report.date) return report as DailyReport;
       const reportDate = new Date(report.date).toISOString().split('T')[0];
 
       const matchingAlerts = alerts?.filter(alert => {
+        if (!alert.created_at) return false;
         const alertDate = new Date(alert.created_at).toISOString().split('T')[0];
         return alertDate === reportDate;
       }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message })) || [];
@@ -168,15 +171,20 @@ export class SupabaseReportService implements IReportService {
     }
 
     // Fetch alerts for this report's date
+    if (!report.date) return report as DailyReport;
     const reportDate = new Date(report.date).toISOString().split('T')[0];
+
+    if (!report.patient_id) return report as DailyReport;
+
     const { data: alerts } = await supabase
       .from('alerts')
       .select('severity, message, created_at')
       .eq('patient_id', report.patient_id);
 
-    const matchingAlerts = alerts?.filter(a =>
-      new Date(a.created_at).toISOString().split('T')[0] === reportDate
-    ).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message }));
+    const matchingAlerts = alerts?.filter(a => {
+      if (!a.created_at) return false;
+      return new Date(a.created_at).toISOString().split('T')[0] === reportDate;
+    }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message }));
 
     return {
       ...report,
