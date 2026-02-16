@@ -17,7 +17,7 @@ export interface SurgeryWithDetails extends Surgery {
 
 export interface PatientDashboardData {
     profile: Profile;
-    currentSurgery: (Surgery & { surgery_type: Pick<SurgeryType, 'name' | 'description' | 'expected_recovery_days'> }) | null;
+    currentSurgery: (Surgery & { surgery_type: Pick<SurgeryType, 'id' | 'name' | 'description' | 'expected_recovery_days'> }) | null;
     daysSinceSurgery: number;
     totalRecoveryDays: number;
 }
@@ -49,4 +49,35 @@ export interface ISurgeryService {
         surgeryDate: string;
         notes?: string;
     }): Promise<Surgery>;
+}
+
+export type Question = Database['public']['Tables']['questions']['Row'];
+export type QuestionOption = Database['public']['Tables']['question_options']['Row'];
+
+export interface QuestionWithDetails extends Question {
+    options: QuestionOption[];
+}
+
+export interface IQuestionService {
+    getQuestionsBySurgeryTypeId(surgeryTypeId: string): Promise<QuestionWithDetails[]>;
+}
+
+export interface IReportService {
+    submitDailyReport(
+        patientId: string,
+        answers: Record<string, any>,
+        questions: QuestionWithDetails[]
+    ): Promise<void>;
+    getPatientReports(patientId: string): Promise<DailyReport[]>;
+    getReportById(reportId: string): Promise<DailyReport | null>;
+}
+
+export interface DailyReport {
+    id: string;
+    date: string;
+    pain_level: number;
+    symptoms: string[] | null;
+    answers: Record<string, any>;
+    created_at: string;
+    alerts?: { severity: 'critical' | 'warning', message: string }[];
 }

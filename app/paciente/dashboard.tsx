@@ -82,7 +82,7 @@ export default function PatientDashboard() {
                         subtitle="Veja sua evolução diária"
                         // @ts-ignore
                         icon={Calendar}
-                        onPress={() => console.log('Timeline')}
+                        onPress={() => router.push('/patient/timeline')}
                         actionLabel={dashboardData?.currentSurgery ? `Dia ${currentDay + 1}` : undefined}
                     />
                     <ActionMenuItem
@@ -92,7 +92,7 @@ export default function PatientDashboard() {
                         icon={FileText}
                         iconColor="#166534"
                         iconBgColor="bg-green-100"
-                        onPress={() => console.log('Questionnaire')}
+                        onPress={() => router.push('/patient/daily-report')}
                         actionLabel="Responder"
                     />
                     <ActionMenuItem

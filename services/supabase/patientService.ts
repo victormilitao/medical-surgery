@@ -67,7 +67,7 @@ export class SupabasePatientService implements IPatientService {
             .eq('id', patientId)
             .single();
 
-        let currentSurgery: (Surgery & { surgery_type: Pick<SurgeryType, 'name' | 'description' | 'expected_recovery_days'> }) | null = null;
+        let currentSurgery: (Surgery & { surgery_type: Pick<SurgeryType, 'id' | 'name' | 'description' | 'expected_recovery_days'> }) | null = null;
         let daysSinceSurgery = 0;
         const totalRecoveryDays = 14;
 
@@ -76,7 +76,7 @@ export class SupabasePatientService implements IPatientService {
                 .from('surgeries')
                 .select(`
                     *,
-                    surgery_type:surgery_types(name, description, expected_recovery_days)
+                    surgery_type:surgery_types(id, name, description, expected_recovery_days)
                 `)
                 .eq('id', patient.surgery_id)
                 .single();
