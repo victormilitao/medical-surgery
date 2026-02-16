@@ -1,15 +1,20 @@
 import Slider from '@react-native-community/slider';
 import { Stack, useNavigation, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { patientService, questionService, reportService } from '../../services';
 import { QuestionWithDetails } from '../../services/types';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function DailyReportScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { session } = useAuth();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [questions, setQuestions] = useState<QuestionWithDetails[]>([]);
@@ -129,16 +134,21 @@ export default function DailyReportScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <Stack.Screen
-        options={{
-          headerTitle: 'Relatório Diário',
-          headerBackButtonDisplayMode: 'minimal',
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#374151',
-        }}
-      />
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <StatusBar style="dark" />
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <View className="flex-row items-center px-4 py-2 bg-white relative">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="p-2 z-10"
+        >
+          <ArrowLeft size={24} color="#374151" />
+        </TouchableOpacity>
+        <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+          <Text className="text-lg font-semibold text-gray-800">Relatório Diário</Text>
+        </View>
+      </View>
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
         <Text className="text-gray-500 mb-6 text-base">

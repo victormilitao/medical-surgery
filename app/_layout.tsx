@@ -20,8 +20,9 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="medico/dashboard" options={{ headerShown: false }} />
-          <Stack.Screen name="paciente/dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="doctor/dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="patient/dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="patient/daily-report" options={{ headerShown: false }} />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>

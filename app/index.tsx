@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { Href, Stack, useRouter } from 'expo-router';
 import { FileText, Lock, Mail, Stethoscope, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
@@ -22,9 +22,9 @@ export default function LoginScreen() {
     useEffect(() => {
         if (!isAuthLoading && session && profile) {
             if (profile.role === 'doctor') {
-                router.replace('/medico/dashboard');
+                router.replace('/doctor/dashboard' as Href);
             } else {
-                router.replace('/paciente/dashboard');
+                router.replace('/patient/dashboard');
             }
         }
     }, [session, profile, isAuthLoading]);
