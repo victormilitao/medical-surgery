@@ -56,6 +56,7 @@ export type QuestionOption = Database['public']['Tables']['question_options']['R
 
 export interface QuestionWithDetails extends Question {
     options: QuestionOption[];
+    display_order: number;
 }
 
 export interface IQuestionService {

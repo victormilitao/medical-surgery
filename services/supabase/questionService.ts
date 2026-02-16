@@ -4,10 +4,14 @@ import { IQuestionService, QuestionWithDetails } from '../types';
 export class SupabaseQuestionService implements IQuestionService {
   async getQuestionsBySurgeryTypeId(surgeryTypeId: string): Promise<QuestionWithDetails[]> {
     const { data, error } = await supabase
-      .from('questions')
+      .from('surgery_questions')
       .select(`
-                *,
-                options:question_options(*)
+                display_order,
+                is_active,
+                question:questions (
+                    *,
+                    options:question_options(*)
+                )
             `)
       .eq('surgery_type_id', surgeryTypeId)
       .eq('is_active', true)
@@ -18,16 +22,26 @@ export class SupabaseQuestionService implements IQuestionService {
       throw error;
     }
 
-    if (data) {
-      // Sort options by display_order
-      data.forEach((q: any) => {
-        if (q.options && Array.isArray(q.options)) {
-          q.options.sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
-        }
-      });
-    }
+    if (!data) return [];
 
-    return (data || []) as QuestionWithDetails[];
+    // Map the result to match QuestionWithDetails structure
+    // We combine the link table fields (display_order) with the question fields
+    const questions = data.map((item: any) => {
+      const question = item.question;
+
+      // Sort options by display_order if they exist
+      if (question.options && Array.isArray(question.options)) {
+        question.options.sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
+      }
+
+      return {
+        ...question,
+        display_order: item.display_order, // Use the order from the link table
+        is_active: item.is_active // Use the active status from the link table
+      };
+    });
+
+    return questions as QuestionWithDetails[];
   }
 }
 

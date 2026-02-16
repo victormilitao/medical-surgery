@@ -197,46 +197,32 @@ export type Database = {
       questions: {
         Row: {
           created_at: string | null
-          display_order: number | null
           id: string
           input_type: string
           is_active: boolean | null
           metadata: Json | null
-          surgery_type_id: string
           text: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          display_order?: number | null
           id?: string
           input_type: string
           is_active?: boolean | null
           metadata?: Json | null
-          surgery_type_id: string
           text: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          display_order?: number | null
           id?: string
           input_type?: string
           is_active?: boolean | null
           metadata?: Json | null
-          surgery_type_id?: string
           text?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "questions_surgery_type_id_fkey"
-            columns: ["surgery_type_id"]
-            isOneToOne: false
-            referencedRelation: "surgery_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       surgeries: {
         Row: {
@@ -289,6 +275,51 @@ export type Database = {
           },
           {
             foreignKeyName: "surgeries_surgery_type_id_fkey"
+            columns: ["surgery_type_id"]
+            isOneToOne: false
+            referencedRelation: "surgery_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surgery_questions: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          is_active: boolean | null
+          question_id: string
+          surgery_type_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean | null
+          question_id: string
+          surgery_type_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean | null
+          question_id?: string
+          surgery_type_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surgery_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "surgery_questions_surgery_type_id_fkey"
             columns: ["surgery_type_id"]
             isOneToOne: false
             referencedRelation: "surgery_types"
@@ -464,3 +495,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
