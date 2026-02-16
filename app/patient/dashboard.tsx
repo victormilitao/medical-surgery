@@ -58,7 +58,7 @@ export default function PatientDashboard() {
                 {/* Progress Section */}
                 {dashboardData?.currentSurgery && (
                     <View className="px-6 mb-8">
-                        <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <View className="bg-white p-4 rounded-xl border border-gray-100">
                             <ProgressBar currentDay={currentDay} totalDays={totalDays} />
                         </View>
                     </View>

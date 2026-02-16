@@ -9,7 +9,7 @@ interface WelcomeHeaderProps {
 
 export function WelcomeHeader({ patientName, surgeryType, surgeryDate }: WelcomeHeaderProps) {
     return (
-        <View className="mb-6 items-center">
+        <View className="items-center">
             <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-4">
                 <Text className="text-3xl">💙</Text>
             </View>
@@ -18,7 +18,7 @@ export function WelcomeHeader({ patientName, surgeryType, surgeryDate }: Welcome
                 Estamos acompanhando sua recuperação.
             </Text>
 
-            <Card className="w-full bg-blue-50 border-blue-100">
+            <Card bordered={false} className="w-full bg-blue-50">
                 <View className="flex-row justify-between mb-2">
                     <Text className="text-gray-500 font-medium">Cirurgia:</Text>
                     <Text className="text-gray-900 font-semibold">{surgeryType}</Text>

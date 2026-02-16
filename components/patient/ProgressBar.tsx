@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { Card } from '../ui/Card';
 
 interface ProgressBarProps {
     currentDay: number;
@@ -9,7 +10,7 @@ export function ProgressBar({ currentDay, totalDays }: ProgressBarProps) {
     const progress = Math.min(Math.max(currentDay / totalDays, 0), 1) * 100;
 
     return (
-        <View className="w-full">
+        <Card bordered={false} className="w-full">
             <View className="flex-row justify-between mb-2">
                 <Text className="text-gray-900 font-semibold text-lg">Seu acompanhamento</Text>
                 <Text className="text-blue-600 font-medium">Dia {currentDay} de {totalDays}</Text>
@@ -23,6 +24,6 @@ export function ProgressBar({ currentDay, totalDays }: ProgressBarProps) {
             <Text className="text-gray-500 text-sm mt-2">
                 Continue respondendo diariamente para melhor acompanhamento.
             </Text>
-        </View>
+        </Card>
     );
 }
