@@ -1,9 +1,11 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, ChevronRight } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { patientService, reportService } from '../../services';
 
@@ -18,6 +20,7 @@ interface TimelineDay {
 export default function TimelineScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [surgeryDate, setSurgeryDate] = useState<Date | null>(null);
@@ -102,7 +105,7 @@ export default function TimelineScreen() {
     if (day.status === 'pending') {
       router.push('/patient/daily-report');
     } else if (day.status === 'completed' && day.reportId) {
-      router.push({ pathname: '/patient/report-history/[id]', params: { id: day.reportId } });
+      router.push({ pathname: '/patient/report-details/[reportId]', params: { reportId: day.reportId } });
     }
   };
 
@@ -115,12 +118,20 @@ export default function TimelineScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="bg-white p-4 pt-12 shadow-sm flex-row items-center border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar style="dark" />
+
+      <View className="flex-row items-center px-4 py-2 bg-white relative">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="p-2 z-10"
+        >
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800">Linha do Tempo</Text>
+        <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+          <Text className="text-lg font-semibold text-gray-800">Linha do Tempo</Text>
+        </View>
       </View>
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>

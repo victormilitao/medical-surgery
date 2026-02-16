@@ -31,7 +31,7 @@ export default function PatientDashboard() {
     const surgeryDate = dashboardData?.currentSurgery?.surgery_date
         ? new Date(dashboardData.currentSurgery.surgery_date).toLocaleDateString('pt-BR')
         : 'N/A';
-    const currentDay = dashboardData?.daysSinceSurgery || 0;
+    const currentDay = (dashboardData?.daysSinceSurgery || 0) + 1;
     const totalDays = (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days || dashboardData?.totalRecoveryDays || 14;
 
     return (
@@ -83,7 +83,7 @@ export default function PatientDashboard() {
                         // @ts-ignore
                         icon={Calendar}
                         onPress={() => router.push('/patient/timeline')}
-                        actionLabel={dashboardData?.currentSurgery ? `Dia ${currentDay + 1}` : undefined}
+
                     />
                     <ActionMenuItem
                         title="Questionário de Hoje"

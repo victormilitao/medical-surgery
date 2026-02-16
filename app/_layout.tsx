@@ -23,6 +23,8 @@ export default function RootLayout() {
           <Stack.Screen name="doctor/dashboard" options={{ headerShown: false }} />
           <Stack.Screen name="patient/dashboard" options={{ headerShown: false }} />
           <Stack.Screen name="patient/daily-report" options={{ headerShown: false }} />
+          <Stack.Screen name="patient/timeline" options={{ headerShown: false }} />
+          <Stack.Screen name="patient/report-details/[reportId]" options={{ headerShown: false }} />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>
