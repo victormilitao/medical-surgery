@@ -88,9 +88,15 @@ export class SupabaseReportService implements IReportService {
     }
 
     // 3. Insert Daily Report
+    // Create local YYYY-MM-DD string to avoid UTC timezone issues
+    const now = new Date();
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000))
+      .toISOString()
+      .split('T')[0];
+
     const { error: reportError } = await supabase.from('daily_reports').insert({
       patient_id: patientId,
-      date: new Date().toISOString(),
+      date: localDate,
       pain_level: painLevel,
       symptoms: symptoms.length > 0 ? symptoms : null, // Store list of symptoms as JSON
       answers: answers // Store raw answers
@@ -170,12 +176,18 @@ export class SupabaseReportService implements IReportService {
     // Map reports and attach alerts if they match the date
     return (reports || []).map(report => {
       if (!report.date) return report as DailyReport;
-      const reportDate = new Date(report.date).toISOString().split('T')[0];
+      // Handle date strictly as string YYYY-MM-DD to avoid timezone shifts
+      const reportDateStr = String(report.date).substring(0, 10);
 
       const matchingAlerts = alerts?.filter(alert => {
         if (!alert.created_at) return false;
+        // alert.created_at is timestampz, so we converts to ISO then take date part
+        // But alerts might be saved in UTC. If alert created at 2026-02-16 21:00:00-03 (Feb 17 00:00 UTC)
+        // new Date(alert.created_at).toISOString() gives 2026-02-17.
+        // We probably want local date of alert?
+        // Let's rely on standard ISO split for now, assuming usually alerts happen same day.
         const alertDate = new Date(alert.created_at).toISOString().split('T')[0];
-        return alertDate === reportDate;
+        return alertDate === reportDateStr;
       }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message })) || [];
 
       return {

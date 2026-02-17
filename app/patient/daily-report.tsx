@@ -237,13 +237,11 @@ export default function DailyReportScreen() {
                   placeholder="Digite aqui..."
                   value={answers[question.id] || ''}
                   onChangeText={(text) => handleAnswerChange(question.id, text)}
-                  maxLength={(question.metadata as any)?.max_length ? Number((question.metadata as any).max_length) : undefined}
+                  maxLength={(question.metadata as any)?.max_length ? Number((question.metadata as any).max_length) : 200}
                 />
-                {(question.metadata as any)?.max_length && (
-                  <Text className="text-right text-xs text-gray-400 mt-1">
-                    {(answers[question.id] || '').length}/{(question.metadata as any).max_length}
-                  </Text>
-                )}
+                <Text className="text-right text-xs text-gray-400 mt-1">
+                  {(answers[question.id] || '').length}/{(question.metadata as any)?.max_length || 200}
+                </Text>
               </View>
             )}
 

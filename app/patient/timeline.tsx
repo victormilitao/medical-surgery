@@ -1,9 +1,9 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, ChevronRight } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
@@ -25,9 +25,11 @@ export default function TimelineScreen() {
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [surgeryDate, setSurgeryDate] = useState<Date | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [session?.user.id]);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [session?.user.id])
+  );
 
   const loadData = async () => {
     if (!session?.user.id) return;
@@ -38,41 +40,61 @@ export default function TimelineScreen() {
       const reports = await reportService.getPatientReports(session.user.id);
 
       if (dashboardData?.currentSurgery) {
-        const sDate = new Date(dashboardData.currentSurgery.surgery_date);
-        sDate.setHours(0, 0, 0, 0); // Normalize surgery date to midnight
+        // Parse surgery date safely as Local YYYY-MM-DD
+        const [sYear, sMonth, sDay] = dashboardData.currentSurgery.surgery_date.split('-').map(Number);
+        // Note: Month in Date constructor is 0-indexed
+        const sDate = new Date(sYear, sMonth - 1, sDay);
+
         setSurgeryDate(sDate);
         const recoveryDays = dashboardData.currentSurgery.surgery_type.expected_recovery_days || 14;
+
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize today
+        today.setHours(0, 0, 0, 0);
 
         const days: TimelineDay[] = [];
 
         for (let i = 1; i <= recoveryDays; i++) {
           const currentDayDate = new Date(sDate);
-          currentDayDate.setDate(sDate.getDate() + i); // Day 1 is the day after surgery
-          // Wait, if 09/02 is Day 1. 14/02 is Day 6?
-          // 14/02 - 09/02 = 5 days.
-          // So Day 1 is 09/02.
-          // Day 6 is 14/02.
+          currentDayDate.setDate(sDate.getDate() + i);
+          // Note: Logic used is Day 1 = Surgery Day + 1 based on previous loop (i=1..).
+          // If User screenshot shows Day 5 = 14th.
+          // If Surgery was 10th. 10+1=11 (Day 1). 10+5=15 (Day 5).
+          // If User screenshot says Day 5 = 14 Feb.
+          // Then Surgery must be 9th. 9+5 = 14.
+          // So Day 1 = 10th (Surgery + 1).
 
-          // Let's refine:
-          // Surgery Date = Day 0 or Day 1?
-          // Usually Post-Op app starts counting "Day 1" as the day OF surgery or day AFTER.
-          // If dashboard says "Dia 5 de 14", let's assume standard linear mapping:
-          // Day 1 = Surgery Date.
-
+          // Compare logic
+          // Compare logic
           const reportForDay = reports.find(r => {
-            const rDate = new Date(r.date);
-            return rDate.getDate() === currentDayDate.getDate() &&
-              rDate.getMonth() === currentDayDate.getMonth() &&
-              rDate.getFullYear() === currentDayDate.getFullYear();
+            // Safe local comparison
+            if (!r.date) return false;
+            // r.date is YYYY-MM-DD string from helper or DB.
+            // Do NOT use new Date(r.date) as it assumes UTC for "YYYY-MM-DD".
+            // Use split logic.
+            const [rYear, rMonth, rDay] = String(r.date).split('-').map(Number);
+
+            // Compare with currentDayDate (which is local midnight)
+            return rDay === currentDayDate.getDate() &&
+              (rMonth - 1) === currentDayDate.getMonth() &&
+              rYear === currentDayDate.getFullYear();
           });
 
           let status: TimelineDay['status'] = 'future';
-          if (currentDayDate < today) {
-            status = reportForDay ? 'completed' : 'missed';
-          } else if (currentDayDate.getTime() === today.getTime()) {
-            status = reportForDay ? 'completed' : 'pending';
+
+          if (reportForDay) {
+            status = 'completed';
+          } else {
+            // Date comparisons
+            const tTime = today.getTime();
+            const cTime = currentDayDate.getTime();
+
+            if (cTime < tTime) {
+              status = 'missed';
+            } else if (cTime === tTime) {
+              status = 'pending';
+            } else {
+              status = 'future';
+            }
           }
 
           // Check alerts
@@ -81,8 +103,6 @@ export default function TimelineScreen() {
             if (reportForDay.alerts.some(a => a.severity === 'critical')) severity = 'critical';
             else if (reportForDay.alerts.some(a => a.severity === 'warning')) severity = 'warning';
           }
-          // Also check logic from report attributes if alerts are missing but implied
-          // (But we trust reportService logic which now saves alerts)
 
           days.push({
             day: i,
