@@ -20,6 +20,7 @@ export default function DailyReportScreen() {
   const [questions, setQuestions] = useState<QuestionWithDetails[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentSurgeryTypeId, setCurrentSurgeryTypeId] = useState<string | null>(null);
+  const [currentSurgeryId, setCurrentSurgeryId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -42,8 +43,29 @@ export default function DailyReportScreen() {
       if (dashboardData?.currentSurgery?.surgery_type_id) {
         const typeId = dashboardData.currentSurgery.surgery_type_id;
         setCurrentSurgeryTypeId(typeId);
+        setCurrentSurgeryId(dashboardData.currentSurgery.id);
 
         const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId);
+
+        // Check for existing report for today
+        const reports = await reportService.getPatientReports(session.user.id);
+        const today = new Date();
+        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000))
+          .toISOString()
+          .split('T')[0];
+
+        const hasReportToday = reports.some(r => {
+          if (!r.date) return false;
+          return String(r.date).split('T')[0] === localDate;
+        });
+
+        if (hasReportToday) {
+          Alert.alert('Aviso', 'Você já respondeu o questionário de hoje.', [
+            { text: 'OK', onPress: () => router.back() }
+          ]);
+          return;
+        }
+
         setQuestions(fetchedQuestions);
       } else {
         Alert.alert('Erro', 'Cirurgia não encontrada.');
@@ -101,7 +123,10 @@ export default function DailyReportScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!session?.user.id) return;
+    if (!session?.user.id || !currentSurgeryId) {
+      Alert.alert('Erro', 'Informações da cirurgia não encontradas.');
+      return;
+    }
 
     // Validate required questions (assuming all visible questions are required)
     // You might want to filter out optional ones if any
@@ -114,7 +139,7 @@ export default function DailyReportScreen() {
 
     try {
       setSubmitting(true);
-      await reportService.submitDailyReport(session.user.id, answers, questions);
+      await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
       Alert.alert('Sucesso', 'Relatório enviado com sucesso!');
       router.back();
     } catch (error) {

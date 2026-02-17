@@ -5,6 +5,7 @@ import { DailyReport, IReportService, QuestionWithDetails } from '../types';
 export class SupabaseReportService implements IReportService {
   async submitDailyReport(
     patientId: string,
+    surgeryId: string,
     answers: Record<string, any>,
     questions: QuestionWithDetails[]
   ): Promise<void> {
@@ -95,7 +96,7 @@ export class SupabaseReportService implements IReportService {
       .split('T')[0];
 
     const { error: reportError } = await supabase.from('daily_reports').insert({
-      patient_id: patientId,
+      surgery_id: surgeryId,
       date: localDate,
       pain_level: painLevel,
       symptoms: symptoms.length > 0 ? symptoms : null, // Store list of symptoms as JSON
@@ -109,16 +110,9 @@ export class SupabaseReportService implements IReportService {
 
     // 4. Create Alert if needed
     if (alertSeverity) {
-      // Get current surgery_id
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('surgery_id')
-        .eq('id', patientId)
-        .single();
-
       const { error: alertError } = await supabase.from('alerts').insert({
         patient_id: patientId,
-        surgery_id: patientData?.surgery_id,
+        surgery_id: surgeryId,
         severity: alertSeverity,
         message: `${alertReason} Detalhes: ${alertMessages.join(', ')}`,
         is_resolved: false
@@ -133,24 +127,27 @@ export class SupabaseReportService implements IReportService {
 
   async getPatientReports(patientId: string): Promise<DailyReport[]> {
     // Fetch reports
-    const { data: reports, error: reportsError } = await supabase
-      .from('daily_reports')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('date', { ascending: false });
-
-    if (reportsError) {
-      console.error('Error fetching reports:', reportsError);
-      throw reportsError;
-    }
-
-    // Fetch alerts for all surgeries of this patient
-    const { data: surgeries } = await supabase
+    // Fetch surgeries for the patient to get their IDs
+    const { data: surgeries, error: surgeriesError } = await supabase
       .from('surgeries')
       .select('id')
       .eq('patient_id', patientId);
 
+    if (surgeriesError) {
+      console.error('Error fetching surgeries:', surgeriesError);
+      throw surgeriesError;
+    }
+
     const surgeryIds = surgeries?.map(s => s.id) || [];
+
+    if (surgeryIds.length === 0) return [];
+
+    // Fetch reports for these surgeries
+    const { data: reports, error: reportsError } = await supabase
+      .from('daily_reports')
+      .select('*')
+      .in('surgery_id', surgeryIds)
+      .order('date', { ascending: false });
 
     let alerts: { severity: string, message: string, created_at: string }[] = [];
 
@@ -213,21 +210,12 @@ export class SupabaseReportService implements IReportService {
     if (!report.date) return report as DailyReport;
     const reportDate = new Date(report.date).toISOString().split('T')[0];
 
-    if (!report.patient_id) return report as DailyReport;
-
-    const { data: surgeries } = await supabase
-      .from('surgeries')
-      .select('id')
-      .eq('patient_id', report.patient_id);
-
-    const surgeryIds = surgeries?.map(s => s.id) || [];
-
-    if (surgeryIds.length === 0) return { ...report, alerts: undefined } as DailyReport;
+    if (!report.surgery_id) return report as DailyReport;
 
     const { data: alerts } = await supabase
       .from('alerts')
       .select('severity, message, created_at')
-      .in('surgery_id', surgeryIds);
+      .eq('surgery_id', report.surgery_id);
 
     const matchingAlerts = (alerts || [])
       .filter(a => a.severity && a.message && a.created_at)

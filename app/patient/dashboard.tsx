@@ -1,12 +1,13 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Calendar, FileText, Info } from 'lucide-react-native';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
 import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { usePatientDashboard } from '../../hooks/usePatientDashboard';
+import { reportService } from '../../services';
 
 export default function PatientDashboard() {
     const router = useRouter();
@@ -23,6 +24,35 @@ export default function PatientDashboard() {
 
     const handleLogout = async () => {
         await signOut();
+    };
+
+    const handleDailyReportPress = async () => {
+        if (!session?.user.id) return;
+
+        try {
+            // Check if report for today already exists
+            const reports = await reportService.getPatientReports(session.user.id);
+            const today = new Date();
+            const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000))
+                .toISOString()
+                .split('T')[0];
+
+            const hasReportToday = reports.some(r => {
+                if (!r.date) return false;
+                return String(r.date).split('T')[0] === localDate;
+            });
+
+            if (hasReportToday) {
+                Alert.alert('Aviso', 'Você já respondeu o questionário de hoje.');
+                return;
+            }
+
+            router.push('/patient/daily-report');
+        } catch (error) {
+            console.error('Error checking reports:', error);
+            // Allow navigation on error to avoid blocking user
+            router.push('/patient/daily-report');
+        }
     };
 
     // Use real data or defaults
@@ -92,8 +122,8 @@ export default function PatientDashboard() {
                         icon={FileText}
                         iconColor="#166534"
                         iconBgColor="bg-green-100"
-                        onPress={() => router.push('/patient/daily-report')}
                         actionLabel="Responder"
+                        onPress={handleDailyReportPress}
                     />
                     <ActionMenuItem
                         title="Orientações por Fase"

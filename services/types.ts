@@ -66,6 +66,7 @@ export interface IQuestionService {
 export interface IReportService {
     submitDailyReport(
         patientId: string,
+        surgeryId: string,
         answers: Record<string, any>,
         questions: QuestionWithDetails[]
     ): Promise<void>;
@@ -79,6 +80,7 @@ export interface DailyReport {
     pain_level: number;
     symptoms: string[] | null;
     answers: Record<string, any>;
+    surgery_id?: string;
     created_at: string;
     alerts?: { severity: 'critical' | 'warning', message: string }[];
 }
