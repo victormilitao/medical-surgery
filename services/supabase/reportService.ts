@@ -103,8 +103,16 @@ export class SupabaseReportService implements IReportService {
 
     // 4. Create Alert if needed
     if (alertSeverity) {
+      // Get current surgery_id
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('surgery_id')
+        .eq('id', patientId)
+        .single();
+
       const { error: alertError } = await supabase.from('alerts').insert({
         patient_id: patientId,
+        surgery_id: patientData?.surgery_id,
         severity: alertSeverity,
         message: `${alertReason} Detalhes: ${alertMessages.join(', ')}`,
         is_resolved: false
@@ -130,14 +138,33 @@ export class SupabaseReportService implements IReportService {
       throw reportsError;
     }
 
-    // Fetch alerts to correlate
-    const { data: alerts, error: alertsError } = await supabase
-      .from('alerts')
-      .select('severity, message, created_at')
+    // Fetch alerts for all surgeries of this patient
+    const { data: surgeries } = await supabase
+      .from('surgeries')
+      .select('id')
       .eq('patient_id', patientId);
 
-    if (alertsError) {
-      console.error('Error fetching alerts:', alertsError);
+    const surgeryIds = surgeries?.map(s => s.id) || [];
+
+    let alerts: { severity: string, message: string, created_at: string }[] = [];
+
+    if (surgeryIds.length > 0) {
+      const { data: fetchedAlerts, error: alertsError } = await supabase
+        .from('alerts')
+        .select('severity, message, created_at')
+        .in('surgery_id', surgeryIds);
+
+      if (alertsError) {
+        console.error('Error fetching alerts:', alertsError);
+      } else {
+        alerts = (fetchedAlerts || [])
+          .filter(a => a.severity && a.message && a.created_at)
+          .map(a => ({
+            severity: a.severity!,
+            message: a.message!,
+            created_at: a.created_at!
+          }));
+      }
     }
 
     // Map reports and attach alerts if they match the date
@@ -176,15 +203,30 @@ export class SupabaseReportService implements IReportService {
 
     if (!report.patient_id) return report as DailyReport;
 
+    const { data: surgeries } = await supabase
+      .from('surgeries')
+      .select('id')
+      .eq('patient_id', report.patient_id);
+
+    const surgeryIds = surgeries?.map(s => s.id) || [];
+
+    if (surgeryIds.length === 0) return { ...report, alerts: undefined } as DailyReport;
+
     const { data: alerts } = await supabase
       .from('alerts')
       .select('severity, message, created_at')
-      .eq('patient_id', report.patient_id);
+      .in('surgery_id', surgeryIds);
 
-    const matchingAlerts = alerts?.filter(a => {
-      if (!a.created_at) return false;
-      return new Date(a.created_at).toISOString().split('T')[0] === reportDate;
-    }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message }));
+    const matchingAlerts = (alerts || [])
+      .filter(a => a.severity && a.message && a.created_at)
+      .filter(a => {
+        const alertDate = new Date(a.created_at!).toISOString().split('T')[0];
+        return alertDate === reportDate;
+      })
+      .map(a => ({
+        severity: a.severity as 'critical' | 'warning',
+        message: a.message!
+      }));
 
     return {
       ...report,

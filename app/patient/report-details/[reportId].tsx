@@ -207,7 +207,6 @@ export default function ReportHistoryScreen() {
                         : 'bg-gray-50 border-gray-100 opacity-50'
                         }`}
                     >
-                      {isSelected && <CheckCircle size={16} color={isAbnormal ? "#DC2626" : "#00BFA5"} className="mr-2" />}
                       <Text className={`font-medium ${isSelected ? (isAbnormal ? 'text-red-700' : 'text-teal-700') : 'text-gray-400'}`}>
                         {option.label}
                       </Text>
