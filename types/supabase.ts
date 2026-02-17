@@ -246,6 +246,7 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          medical_status: 'stable' | 'warning' | 'critical' | null
           status: string
           surgery_date: string
           surgery_type_id: string
@@ -255,6 +256,7 @@ export type Database = {
           created_at?: string
           doctor_id: string
           id?: string
+          medical_status: 'stable' | 'warning' | 'critical' | null
           notes?: string | null
           patient_id: string
           status?: string
@@ -266,6 +268,7 @@ export type Database = {
           created_at?: string
           doctor_id?: string
           id?: string
+          medical_status?: 'stable' | 'warning' | 'critical' | null
           notes?: string | null
           patient_id?: string
           status?: string

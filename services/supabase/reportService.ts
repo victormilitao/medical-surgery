@@ -123,6 +123,20 @@ export class SupabaseReportService implements IReportService {
         // Don't throw here, as the report was already saved. just log it.
       }
     }
+
+    // 5. Update Surgery Medical Status
+    const newStatus = alertSeverity === 'critical' ? 'critical'
+      : alertSeverity === 'warning' ? 'warning'
+        : 'stable';
+
+    const { error: updateSurgeryError } = await supabase
+      .from('surgeries')
+      .update({ medical_status: newStatus })
+      .eq('id', surgeryId);
+
+    if (updateSurgeryError) {
+      console.error('Error updating surgery status:', updateSurgeryError);
+    }
   }
 
   async getPatientReports(patientId: string): Promise<DailyReport[]> {
