@@ -148,7 +148,7 @@ export default function TimelineScreen() {
             disabled={item.status === 'future' || item.status === 'missed'}
             onPress={() => handleDayPress(item)}
             className={`mb-4 p-4 rounded-xl border flex-row items-center justify-between ${item.status === 'future' ? 'bg-gray-50 border-gray-100 opacity-60' :
-              item.status === 'pending' ? 'bg-white border-teal-500 shadow-sm' :
+              item.status === 'pending' ? 'bg-white border-blue-500 shadow-sm' :
                 item.status === 'missed' ? 'bg-gray-100 border-gray-200' :
                   item.alertSeverity === 'critical' ? 'bg-red-50 border-red-200' :
                     item.alertSeverity === 'warning' ? 'bg-yellow-50 border-yellow-200' :
@@ -156,14 +156,14 @@ export default function TimelineScreen() {
               }`}
           >
             <View className="flex-row items-center flex-1">
-              <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-teal-100' :
+              <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-blue-100' :
                 item.status === 'future' ? 'bg-gray-200' :
                   item.status === 'missed' ? 'bg-gray-300' :
                     item.alertSeverity === 'critical' ? 'bg-red-100' :
                       item.alertSeverity === 'warning' ? 'bg-yellow-100' :
                         'bg-green-100'
                 }`}>
-                <Text className={`font-bold ${item.status === 'pending' ? 'text-teal-700' :
+                <Text className={`font-bold ${item.status === 'pending' ? 'text-blue-700' :
                   item.status === 'future' ? 'text-gray-500' :
                     item.status === 'missed' ? 'text-gray-500' :
                       item.alertSeverity === 'critical' ? 'text-red-700' :
@@ -184,7 +184,7 @@ export default function TimelineScreen() {
 
             <View>
               {item.status === 'pending' && (
-                <View className="bg-teal-500 px-3 py-1.5 rounded-full">
+                <View className="bg-blue-600 px-3 py-1.5 rounded-full">
                   <Text className="text-white font-medium text-xs">Responder</Text>
                 </View>
               )}
