@@ -1,12 +1,11 @@
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Card } from '../ui/Card';
 
 export type StatStatus = 'critical' | 'warning' | 'stable' | 'finished';
 
 interface StatCardProps {
     label: string;
     count: number;
-    color: 'red' | 'yellow' | 'green' | 'blue';
+    color: 'red' | 'yellow' | 'green' | 'gray';
     isSelected: boolean;
     onPress: () => void;
 }
@@ -17,32 +16,31 @@ function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
     let countColor = 'text-gray-900';
 
     if (color === 'red') {
-        bgColor = 'bg-red-200';
+        bgColor = 'bg-red-100';
         textColor = 'text-red-700';
         countColor = 'text-red-600';
     } else if (color === 'yellow') {
-        bgColor = 'bg-yellow-50';
+        bgColor = 'bg-yellow-100';
         textColor = 'text-yellow-700';
         countColor = 'text-yellow-600';
     } else if (color === 'green') {
-        bgColor = 'bg-green-200';
+        bgColor = 'bg-green-100';
         textColor = 'text-green-700';
         countColor = 'text-green-600';
-    } else if (color === 'blue') {
-        bgColor = 'bg-blue-200';
-        textColor = 'text-blue-700';
-        countColor = 'text-blue-600';
+    } else if (color === 'gray') {
+        bgColor = 'bg-gray-200';
+        textColor = 'text-gray-700';
+        countColor = 'text-gray-600';
     }
 
     return (
         <TouchableOpacity onPress={onPress} className="flex-1 mx-1" activeOpacity={0.7}>
-            <Card
-                className={`items-center justify-center ${isSelected ? 'border-1' : 'border-0'}`}
-                style={isSelected ? { borderColor: textColor.replace('text-', '').replace('-700', '') } : {}} // Simple hack, ideally calculate color code
+            <View
+                className={`items-center justify-center rounded-xl p-3 shadow-sm border border-gray-100 ${isSelected ? bgColor : 'bg-white'}`}
             >
                 <Text className={`text-2xl font-bold ${countColor}`}>{count}</Text>
                 <Text className={`text-xs font-medium ${textColor} text-center`}>{label}</Text>
-            </Card>
+            </View>
         </TouchableOpacity>
     );
 }
@@ -89,7 +87,7 @@ export function StatsGrid({ counts, selectedStatus, onSelectStatus }: StatsGridP
             <StatCard
                 label="Finalizado"
                 count={counts?.finished || 0}
-                color="blue"
+                color="gray"
                 isSelected={selectedStatus === 'finished'}
                 onPress={() => handleSelect('finished')}
             />
