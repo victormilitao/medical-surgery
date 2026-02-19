@@ -11,24 +11,24 @@ interface StatCardProps {
 }
 
 function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
-    let bgColor = 'bg-gray-100';
+    let borderColor = 'border-gray-300';
     let textColor = 'text-gray-900';
     let countColor = 'text-gray-900';
 
     if (color === 'red') {
-        bgColor = 'bg-red-100';
+        borderColor = 'border-red-500';
         textColor = 'text-red-700';
         countColor = 'text-red-600';
     } else if (color === 'yellow') {
-        bgColor = 'bg-yellow-100';
+        borderColor = 'border-yellow-500';
         textColor = 'text-yellow-700';
         countColor = 'text-yellow-600';
     } else if (color === 'green') {
-        bgColor = 'bg-green-100';
+        borderColor = 'border-green-500';
         textColor = 'text-green-700';
         countColor = 'text-green-600';
     } else if (color === 'gray') {
-        bgColor = 'bg-gray-200';
+        borderColor = 'border-gray-400';
         textColor = 'text-gray-700';
         countColor = 'text-gray-600';
     }
@@ -36,7 +36,7 @@ function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
     return (
         <TouchableOpacity onPress={onPress} className="flex-1 mx-1" activeOpacity={0.7}>
             <View
-                className={`items-center justify-center rounded-xl p-3 shadow-sm border border-gray-100 ${isSelected ? bgColor : 'bg-white'}`}
+                className={`items-center justify-center rounded-xl p-3 shadow-sm bg-white border-2 ${isSelected ? borderColor : 'border-gray-100'}`}
             >
                 <Text className={`text-2xl font-bold ${countColor}`}>{count}</Text>
                 <Text className={`text-xs font-medium ${textColor} text-center`}>{label}</Text>
