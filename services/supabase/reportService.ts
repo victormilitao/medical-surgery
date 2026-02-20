@@ -132,7 +132,10 @@ export class SupabaseReportService implements IReportService {
 
     const { error: updateSurgeryError } = await supabase
       .from('surgeries')
-      .update({ medical_status: newStatus })
+      .update({
+        medical_status: newStatus,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', surgeryId);
 
     if (updateSurgeryError) {
@@ -185,19 +188,55 @@ export class SupabaseReportService implements IReportService {
       }
     }
 
-    // Map reports and attach alerts if they match the date
+    // ... rest of getPatientReports
+
     return (reports || []).map(report => {
       if (!report.date) return report as DailyReport;
-      // Handle date strictly as string YYYY-MM-DD to avoid timezone shifts
+      const reportDateStr = String(report.date).substring(0, 10);
+      const matchingAlerts = alerts?.filter(alert => {
+        if (!alert.created_at) return false;
+        const alertDate = new Date(alert.created_at).toISOString().split('T')[0];
+        return alertDate === reportDateStr;
+      }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message })) || [];
+      return {
+        ...report,
+        alerts: matchingAlerts.length > 0 ? matchingAlerts : undefined
+      } as DailyReport;
+    });
+  }
+
+  async getReportsBySurgeryId(surgeryId: string): Promise<DailyReport[]> {
+    const { data: reports, error: reportsError } = await supabase
+      .from('daily_reports')
+      .select('*')
+      .eq('surgery_id', surgeryId)
+      .order('date', { ascending: false });
+
+    let alerts: { severity: string, message: string, created_at: string }[] = [];
+
+    const { data: fetchedAlerts, error: alertsError } = await supabase
+      .from('alerts')
+      .select('severity, message, created_at')
+      .eq('surgery_id', surgeryId);
+
+    if (alertsError) {
+      console.error('Error fetching alerts:', alertsError);
+    } else {
+      alerts = (fetchedAlerts || [])
+        .filter(a => a.severity && a.message && a.created_at)
+        .map(a => ({
+          severity: a.severity!,
+          message: a.message!,
+          created_at: a.created_at!
+        }));
+    }
+
+    return (reports || []).map(report => {
+      if (!report.date) return report as DailyReport;
       const reportDateStr = String(report.date).substring(0, 10);
 
       const matchingAlerts = alerts?.filter(alert => {
         if (!alert.created_at) return false;
-        // alert.created_at is timestampz, so we converts to ISO then take date part
-        // But alerts might be saved in UTC. If alert created at 2026-02-16 21:00:00-03 (Feb 17 00:00 UTC)
-        // new Date(alert.created_at).toISOString() gives 2026-02-17.
-        // We probably want local date of alert?
-        // Let's rely on standard ISO split for now, assuming usually alerts happen same day.
         const alertDate = new Date(alert.created_at).toISOString().split('T')[0];
         return alertDate === reportDateStr;
       }).map(a => ({ severity: a.severity as 'critical' | 'warning', message: a.message })) || [];

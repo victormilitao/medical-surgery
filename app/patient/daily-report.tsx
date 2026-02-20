@@ -128,9 +128,18 @@ export default function DailyReportScreen() {
       return;
     }
 
-    // Validate required questions (assuming all visible questions are required)
-    // You might want to filter out optional ones if any
-    const missingAnswers = questions.filter(q => shouldRenderQuestion(q) && (answers[q.id] === undefined || answers[q.id] === null));
+    const missingAnswers = questions.filter(q => {
+      if (!shouldRenderQuestion(q)) return false;
+
+      const isOptionalText = q.text.toLowerCase().includes('algo mais que gostaria de relatar');
+      const isExplicitlyOptional = (q.metadata as any)?.optional === true || (q.metadata as any)?.is_required === false;
+      const isOptional = isOptionalText || isExplicitlyOptional;
+
+      if (isOptional) return false;
+
+      const answer = answers[q.id];
+      return answer === undefined || answer === null || answer === '';
+    });
 
     if (missingAnswers.length > 0) {
       Alert.alert('Atenção', 'Por favor, responda todas as perguntas obrigatórias.');

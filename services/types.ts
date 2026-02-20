@@ -78,6 +78,7 @@ export interface IReportService {
         questions: QuestionWithDetails[]
     ): Promise<void>;
     getPatientReports(patientId: string): Promise<DailyReport[]>;
+    getReportsBySurgeryId(surgeryId: string): Promise<DailyReport[]>;
     getReportById(reportId: string): Promise<DailyReport | null>;
 }
 

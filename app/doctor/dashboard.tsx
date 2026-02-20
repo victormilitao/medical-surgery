@@ -100,8 +100,8 @@ export default function DoctorDashboard() {
     await signOut();
   };
 
-  const handlePatientClick = (name: string) => {
-    console.log(`Open patient: ${name}`);
+  const handlePatientClick = (surgeryId: string) => {
+    router.push({ pathname: '/doctor/patient-timeline/[surgeryId]', params: { surgeryId } });
   };
 
   if (isAuthLoading) return <View className="flex-1 justify-center items-center"><Text>Carregando...</Text></View>;
@@ -149,7 +149,7 @@ export default function DoctorDashboard() {
               status={patient.status}
               lastUpdate={patient.lastUpdate}
               alerts={patient.alerts}
-              onPress={() => handlePatientClick(patient.name)}
+              onPress={() => handlePatientClick(patient.id)}
             />
           ))
         )}
