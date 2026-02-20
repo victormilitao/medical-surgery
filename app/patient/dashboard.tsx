@@ -1,7 +1,9 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Calendar, FileText, Info } from 'lucide-react-native';
+import React, { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
+import { PhaseGuidelinesSheet } from '../../components/patient/PhaseGuidelinesSheet';
 import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +14,7 @@ import { reportService } from '../../services';
 export default function PatientDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
+    const [isGuidelinesVisible, setIsGuidelinesVisible] = useState(false);
 
     // Fetch patient dashboard data
     const { data: dashboardData, isLoading: isDashboardLoading } = usePatientDashboard(profile?.id);
@@ -136,10 +139,15 @@ export default function PatientDashboard() {
                         icon={Info}
                         iconColor="#9333ea"
                         iconBgColor="bg-purple-100"
-                        onPress={() => console.log('Guidelines')}
+                        onPress={() => setIsGuidelinesVisible(true)}
                     />
                 </View>
             </ScrollView>
+
+            <PhaseGuidelinesSheet
+                visible={isGuidelinesVisible}
+                onClose={() => setIsGuidelinesVisible(false)}
+            />
         </View>
     );
 }
