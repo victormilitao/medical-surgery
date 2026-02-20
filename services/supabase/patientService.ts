@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { Database } from '../../types/supabase';
 import { IPatientService, PatientDashboardData, PatientWithProfile } from '../types';
@@ -109,30 +108,14 @@ export class SupabasePatientService implements IPatientService {
         surgeryDate: string;
         doctorId: string;
     }): Promise<{ patientId: string; surgeryId: string }> {
-        // 1. Create a specialized Supabase instance so we do not log the doctor out
-        const adminSupabase = createClient(
-            process.env.EXPO_PUBLIC_SUPABASE_URL!,
-            process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: { persistSession: false, autoRefreshToken: false }
-            }
-        );
-
-        // 2. Create the patient account (this creates auth.users and profiles via DB trigger)
-        const { data: authData, error: authError } = await adminSupabase.auth.signUp({
-            email: data.email,
-            password: 'Password123!', // Paciente vai usar acesso via OTP depois
-            options: {
-                data: {
-                    full_name: data.name,
-                    role: 'patient'
-                }
-            }
+        // 1. Create the patient using a database RPC to bypass GoTrue's email ratelimit
+        const { data: newPatientId, error: authError } = await (supabase as any).rpc('create_patient_bypass', {
+            patient_email: data.email,
+            patient_password: 'Password123!', // Paciente vai usar acesso via OTP depois
+            patient_name: data.name
         });
 
         if (authError) throw authError;
-
-        const newPatientId = authData.user?.id;
         if (!newPatientId) throw new Error('Não foi possível criar o usuário do paciente');
 
         // Atualiza a tabela profiles caso a trigger não tenha preenchido o nome corretamente

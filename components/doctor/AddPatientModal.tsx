@@ -57,8 +57,8 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
 
     try {
       await patientService.createPatient({
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
         surgeryTypeId,
         surgeryDate: formattedDate,
         doctorId: profile.id
