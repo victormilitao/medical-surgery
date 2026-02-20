@@ -33,29 +33,17 @@ export default function LoginScreen() {
         if (!email) return;
         setIsLoading(true);
         try {
-            // DEV: Allow password login for test users to bypass email rate limits
-            if (email.includes('test')) {
-                const { error: devLoginError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password: 'password123'
-                });
-                if (!devLoginError) return; // Success, auto-redirect triggers
-            }
-
-            const { error } = await supabase.auth.signInWithOtp({
+            // DEV: Allow password login for ALL users to bypass email rate limits
+            const { error: devLoginError } = await supabase.auth.signInWithPassword({
                 email,
-                options: {
-                    shouldCreateUser: true, // Allow signups
-                    data: { role: 'patient' }
-                }
+                password: 'Password123!'
             });
 
-            if (error) {
-                Alert.alert('Erro', error.message);
-            } else {
-                Alert.alert('Sucesso', 'Verifique seu e-mail para o código de acesso!');
-                setRole('none');
+            if (devLoginError) {
+                Alert.alert('Erro', devLoginError.message);
             }
+            // If success, auto-redirect triggers from useEffect
+
         } catch (error) {
             Alert.alert('Erro', 'Ocorreu um erro inesperado.');
             console.error(error);

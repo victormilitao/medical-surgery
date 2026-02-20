@@ -59,9 +59,13 @@ export default function PatientDashboard() {
     const patientName = dashboardData?.profile.full_name || 'Paciente';
     const surgeryType = (dashboardData?.currentSurgery as any)?.surgery_type?.name || 'Nenhuma cirurgia registrada';
     const surgeryDate = dashboardData?.currentSurgery?.surgery_date
-        ? new Date(dashboardData.currentSurgery.surgery_date).toLocaleDateString('pt-BR')
+        ? (() => {
+            const dateParts = dashboardData.currentSurgery.surgery_date.split('T')[0].split('-');
+            const d = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+            return d.toLocaleDateString('pt-BR');
+        })()
         : 'N/A';
-    const currentDay = (dashboardData?.daysSinceSurgery || 0) + 1;
+    const currentDay = Math.max(0, dashboardData?.daysSinceSurgery || 0);
     const totalDays = (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days || dashboardData?.totalRecoveryDays || 14;
 
     return (

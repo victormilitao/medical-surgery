@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { Database } from '../../types/supabase';
 import { IPatientService, PatientDashboardData, PatientWithProfile } from '../types';
@@ -83,8 +84,12 @@ export class SupabasePatientService implements IPatientService {
 
             if (surgery) {
                 currentSurgery = surgery as any;
-                const surgeryDate = new Date(surgery.surgery_date);
+                // Create local date from YYYY-MM-DD to avoid UTC shift
+                const dateParts = surgery.surgery_date.split('T')[0].split('-');
+                const surgeryDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+
                 const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize today to midnight for accurate diff
                 daysSinceSurgery = Math.floor((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
             }
         }
@@ -95,6 +100,74 @@ export class SupabasePatientService implements IPatientService {
             daysSinceSurgery,
             totalRecoveryDays
         };
+    }
+
+    async createPatient(data: {
+        name: string;
+        email: string;
+        surgeryTypeId: string;
+        surgeryDate: string;
+        doctorId: string;
+    }): Promise<{ patientId: string; surgeryId: string }> {
+        // 1. Create a specialized Supabase instance so we do not log the doctor out
+        const adminSupabase = createClient(
+            process.env.EXPO_PUBLIC_SUPABASE_URL!,
+            process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false }
+            }
+        );
+
+        // 2. Create the patient account (this creates auth.users and profiles via DB trigger)
+        const { data: authData, error: authError } = await adminSupabase.auth.signUp({
+            email: data.email,
+            password: 'Password123!', // Paciente vai usar acesso via OTP depois
+            options: {
+                data: {
+                    full_name: data.name,
+                    role: 'patient'
+                }
+            }
+        });
+
+        if (authError) throw authError;
+
+        const newPatientId = authData.user?.id;
+        if (!newPatientId) throw new Error('Não foi possível criar o usuário do paciente');
+
+        // Atualiza a tabela profiles caso a trigger não tenha preenchido o nome corretamente
+        await supabase
+            .from('profiles')
+            .update({ full_name: data.name, role: 'patient' })
+            .eq('id', newPatientId);
+
+        // 3. Create the surgery
+        const { data: surgeryData, error: surgeryError } = await supabase
+            .from('surgeries')
+            .insert({
+                patient_id: newPatientId,
+                doctor_id: data.doctorId,
+                surgery_type_id: data.surgeryTypeId,
+                surgery_date: data.surgeryDate,
+                status: 'active',
+                medical_status: 'stable'
+            })
+            .select()
+            .single();
+
+        if (surgeryError || !surgeryData) throw surgeryError || new Error('Cirurgia não criada');
+
+        // 4. Create the patient-doctor link
+        const { error: patientLinkError } = await supabase
+            .from('patients')
+            .insert({
+                id: newPatientId,
+                surgery_id: surgeryData.id
+            });
+
+        if (patientLinkError) throw patientLinkError;
+
+        return { patientId: newPatientId, surgeryId: surgeryData.id };
     }
 }
 

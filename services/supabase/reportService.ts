@@ -44,7 +44,8 @@ export class SupabaseReportService implements IReportService {
         // Find selected option
         const selectedOption = question.options?.find(opt => opt.value === String(answerValue));
         if (selectedOption) {
-          if (selectedOption.is_abnormal) {
+          const isAbnormalOption = String(selectedOption.is_abnormal) === 'true';
+          if (isAbnormalOption === true) {
             isAbnormal = true;
             symptoms.push(question.text); // Add question text to symptoms list
             alertMessages.push(`${question.text}: ${selectedOption.label}`);
@@ -55,7 +56,8 @@ export class SupabaseReportService implements IReportService {
         if (Array.isArray(answerValue)) {
           for (const val of answerValue) {
             const option = question.options?.find(opt => opt.value === String(val));
-            if (option && option.is_abnormal) {
+            const isAbnormalOption = option ? String(option.is_abnormal) === 'true' : false;
+            if (isAbnormalOption === true && option) {
               isAbnormal = true; // Mark question as having abnormal answer
               symptoms.push(`${question.text} (${option.label})`);
               alertMessages.push(`${question.text}: ${option.label}`);
@@ -111,7 +113,6 @@ export class SupabaseReportService implements IReportService {
     // 4. Create Alert if needed
     if (alertSeverity) {
       const { error: alertError } = await supabase.from('alerts').insert({
-        patient_id: patientId,
         surgery_id: surgeryId,
         severity: alertSeverity,
         message: `${alertReason} Detalhes: ${alertMessages.join(', ')}`,

@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { AddPatientModal } from '../../components/doctor/AddPatientModal';
 import { PatientListItem, PatientStatus } from '../../components/doctor/PatientListItem';
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
@@ -9,7 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSurgeriesByDoctor } from '../../hooks/useSurgeries';
 
 interface Patient {
-  id: string;
+  id: string; // This will now represent surgery.id for uniqueness
   name: string;
   surgeryDate: string;
   day: number;
@@ -21,8 +23,10 @@ interface Patient {
 
 export default function DoctorDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { session, isLoading: isAuthLoading, isDoctor, signOut, profile } = useAuth();
   const [filterStatus, setFilterStatus] = useState<PatientStatus>('critical');
+  const [isAddPatientVisible, setIsAddPatientVisible] = useState(false);
 
   // Use React Query hook for surgeries
   const { data: surgeriesData, isLoading: isSurgeriesLoading } = useSurgeriesByDoctor(profile?.id);
@@ -32,8 +36,12 @@ export default function DoctorDashboard() {
     if (!surgeriesData) return [];
 
     return surgeriesData.map((surgery) => {
-      const surgeryDate = new Date(surgery.surgery_date);
+      // Create local date from YYYY-MM-DD to avoid UTC shift
+      const dateParts = surgery.surgery_date.split('T')[0].split('-');
+      const surgeryDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+
       const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize today to midnight for accurate diff
       const daysSinceSurgery = Math.floor((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
 
       // Map surgery status to patient status using the new medical_status field if available, 
@@ -54,10 +62,10 @@ export default function DoctorDashboard() {
       }
 
       return {
-        id: surgery.patient_id,
+        id: surgery.id, // Use surgery.id instead of patient_id as unique key
         name: surgery.patient?.full_name || 'Sem nome',
         surgeryDate: surgeryDate.toLocaleDateString('pt-BR'),
-        day: daysSinceSurgery + 1,
+        day: Math.max(0, daysSinceSurgery),
         surgeryType: surgery.surgery_type?.name || 'Não especificado',
         status: patientStatus,
         lastUpdate: new Date(surgery.updated_at || surgery.created_at || new Date()).toLocaleDateString('pt-BR'),
@@ -150,10 +158,22 @@ export default function DoctorDashboard() {
       {/* FAB - Floating Action Button */}
       <TouchableOpacity
         className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg"
-        onPress={() => console.log('Add Patient')}
+        onPress={() => setIsAddPatientVisible(true)}
       >
         <Plus size={30} color="white" />
       </TouchableOpacity>
+
+      <AddPatientModal
+        visible={isAddPatientVisible}
+        onClose={() => setIsAddPatientVisible(false)}
+        onSuccess={() => {
+          // Refresh patients
+          if (profile?.id) {
+            queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
+            queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
+          }
+        }}
+      />
     </View>
   );
 }

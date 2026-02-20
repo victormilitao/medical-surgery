@@ -37,6 +37,13 @@ export interface IPatientService {
     getPatientsByDoctorId(doctorId: string): Promise<PatientWithProfile[]>;
     getPatientById(patientId: string): Promise<PatientWithProfile | null>;
     getPatientDashboardData(patientId: string): Promise<PatientDashboardData | null>;
+    createPatient(data: {
+        name: string;
+        email: string;
+        surgeryTypeId: string;
+        surgeryDate: string;
+        doctorId: string;
+    }): Promise<{ patientId: string; surgeryId: string }>;
 }
 
 export interface ISurgeryService {
