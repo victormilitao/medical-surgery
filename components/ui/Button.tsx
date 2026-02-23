@@ -1,12 +1,15 @@
-import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import React from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 
 interface ButtonProps extends TouchableOpacityProps {
     title: string;
     variant?: 'primary' | 'outline' | 'ghost' | 'danger';
     isLoading?: boolean;
+    icon?: React.ReactNode;
+    textClassName?: string;
 }
 
-export function Button({ title, variant = 'primary', isLoading, className, ...props }: ButtonProps) {
+export function Button({ title, variant = 'primary', isLoading, className, icon, textClassName, ...props }: ButtonProps) {
     let bgClass = 'bg-blue-600';
     let textClass = 'text-white';
 
@@ -30,7 +33,10 @@ export function Button({ title, variant = 'primary', isLoading, className, ...pr
             {isLoading ? (
                 <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? '#2563eb' : 'white'} />
             ) : (
-                <Text className={`font-semibold text-base ${textClass}`}>{title}</Text>
+                <View className="flex-row items-center gap-2">
+                    {icon}
+                    <Text className={`font-semibold text-base ${textClass} ${textClassName ?? ''}`}>{title}</Text>
+                </View>
             )}
         </TouchableOpacity>
     );

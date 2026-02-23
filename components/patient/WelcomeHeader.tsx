@@ -1,33 +1,23 @@
 import { Text, View } from 'react-native';
-import { Card } from '../ui/Card';
 
 interface WelcomeHeaderProps {
-    patientName: string;
     surgeryType: string;
     surgeryDate: string;
 }
 
-export function WelcomeHeader({ patientName, surgeryType, surgeryDate }: WelcomeHeaderProps) {
+export function WelcomeHeader({ surgeryType, surgeryDate }: WelcomeHeaderProps) {
     return (
-        <View className="items-center">
-            <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-4">
-                <Text className="text-3xl">💙</Text>
-            </View>
-            <Text className="text-2xl font-bold text-gray-900 mb-1">Olá, {patientName}!</Text>
-            <Text className="text-gray-500 text-center px-4 mb-4">
-                Estamos acompanhando sua recuperação.
-            </Text>
-
-            <Card bordered={false} className="w-full bg-blue-50">
+        <View className="pb-2">
+            <View className="rounded-xl">
                 <View className="flex-row justify-between mb-2">
-                    <Text className="text-gray-500 font-medium">Cirurgia:</Text>
-                    <Text className="text-gray-900 font-semibold">{surgeryType}</Text>
+                    <Text className="text-blue-100 font-medium">Cirurgia:</Text>
+                    <Text className="text-white font-semibold flex-1 text-right ml-2">{surgeryType}</Text>
                 </View>
                 <View className="flex-row justify-between">
-                    <Text className="text-gray-500 font-medium">Data:</Text>
-                    <Text className="text-gray-900 font-semibold">{surgeryDate}</Text>
+                    <Text className="text-blue-100 font-medium">Data:</Text>
+                    <Text className="text-white font-semibold">{surgeryDate}</Text>
                 </View>
-            </Card>
+            </View>
         </View>
     );
 }

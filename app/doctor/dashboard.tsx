@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, Stack, useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import { LogOut, Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddPatientModal } from '../../components/doctor/AddPatientModal';
 import { PatientListItem, PatientStatus } from '../../components/doctor/PatientListItem';
 import { StatsGrid } from '../../components/doctor/StatsGrid';
@@ -27,6 +28,7 @@ export default function DoctorDashboard() {
   const { session, isLoading: isAuthLoading, isDoctor, signOut, profile } = useAuth();
   const [filterStatus, setFilterStatus] = useState<PatientStatus>('critical');
   const [isAddPatientVisible, setIsAddPatientVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // Use React Query hook for surgeries
   const { data: surgeriesData, isLoading: isSurgeriesLoading } = useSurgeriesByDoctor(profile?.id);
@@ -112,16 +114,19 @@ export default function DoctorDashboard() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View className="px-6 pt-20 pb-4">
+      <View
+        className="bg-blue-600 px-6 pb-6 rounded-b-3xl mb-4"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <View className="flex-row justify-between items-center">
-          <View>
-            <Text className="text-2xl font-bold text-gray-900">{profile?.full_name || ''}</Text>
-          </View>
+          <Text className="text-2xl font-bold text-white">{profile?.full_name || ''}</Text>
           <Button
             title="Sair"
             variant="ghost"
             onPress={handleLogout}
-            className="h-8 px-2"
+            icon={<LogOut size={16} color="#fff" />}
+            className="h-8 px-2 rounded-xl"
+            textClassName="text-white"
           />
         </View>
       </View>

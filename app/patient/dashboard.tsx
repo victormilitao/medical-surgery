@@ -1,7 +1,8 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
-import { Calendar, FileText, Info } from 'lucide-react-native';
+import { Calendar, FileText, Info, LogOut } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
 import { PhaseGuidelinesSheet } from '../../components/patient/PhaseGuidelinesSheet';
 import { ProgressBar } from '../../components/patient/ProgressBar';
@@ -15,6 +16,7 @@ export default function PatientDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
     const [isGuidelinesVisible, setIsGuidelinesVisible] = useState(false);
+    const insets = useSafeAreaInsets();
 
     // Fetch patient dashboard data
     const { data: dashboardData, isLoading: isDashboardLoading } = usePatientDashboard(profile?.id);
@@ -76,17 +78,22 @@ export default function PatientDashboard() {
             <Stack.Screen options={{ headerShown: false }} />
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header Section */}
-                <View className="bg-white px-6 pt-12 pb-6 rounded-b-3xl shadow-sm mb-6">
-                    <View className="items-end mb-2">
+                <View
+                    className="bg-blue-600 px-6 pb-4 rounded-b-3xl mb-4"
+                    style={{ paddingTop: insets.top + 12 }}
+                >
+                    <View className="flex-row justify-between items-center mb-6">
+                        <Text className="text-2xl font-bold text-white">{patientName}</Text>
                         <Button
                             title="Sair"
                             variant="ghost"
                             onPress={handleLogout}
-                            className="h-8 px-2"
+                            icon={<LogOut size={16} color="#fff" />}
+                            className="h-8 px-2 rounded-xl"
+                            textClassName="text-white"
                         />
                     </View>
                     <WelcomeHeader
-                        patientName={patientName}
                         surgeryType={surgeryType}
                         surgeryDate={surgeryDate}
                     />
