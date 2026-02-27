@@ -79,7 +79,7 @@ export default function PatientDashboard() {
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header Section */}
                 <View
-                    className="bg-blue-600 px-6 pb-4 rounded-b-3xl mb-4"
+                    className="bg-primary-700 px-6 pb-4 rounded-b-3xl mb-4"
                     style={{ paddingTop: insets.top + 12 }}
                 >
                     <View className="flex-row justify-between items-center mb-6">
@@ -122,15 +122,7 @@ export default function PatientDashboard() {
                 {/* Menu Section */}
                 <View className="px-6">
                     <ActionMenuItem
-                        title="Linha do Tempo"
-                        subtitle="Veja sua evolução diária"
-                        // @ts-ignore
-                        icon={Calendar}
-                        onPress={() => router.push('/patient/timeline')}
-
-                    />
-                    <ActionMenuItem
-                        title="Questionário de Hoje"
+                        title="Consulta do Dia"
                         subtitle="Responda suas perguntas diárias"
                         // @ts-ignore
                         icon={FileText}
@@ -138,6 +130,13 @@ export default function PatientDashboard() {
                         iconBgColor="bg-green-100"
                         actionLabel="Responder"
                         onPress={handleDailyReportPress}
+                    />
+                    <ActionMenuItem
+                        title="Linha do Tempo"
+                        subtitle="Veja sua evolução diária"
+                        // @ts-ignore
+                        icon={Calendar}
+                        onPress={() => router.push('/patient/timeline')}
                     />
                     <ActionMenuItem
                         title="Orientações por Fase"
@@ -154,6 +153,7 @@ export default function PatientDashboard() {
             <PhaseGuidelinesSheet
                 visible={isGuidelinesVisible}
                 onClose={() => setIsGuidelinesVisible(false)}
+                currentDay={currentDay}
             />
         </View>
     );

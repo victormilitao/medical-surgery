@@ -4,7 +4,6 @@ import { LogOut, Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AddPatientModal } from '../../components/doctor/AddPatientModal';
 import { PatientListItem, PatientStatus } from '../../components/doctor/PatientListItem';
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
@@ -12,7 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSurgeriesByDoctor } from '../../hooks/useSurgeries';
 
 interface Patient {
-  id: string; // This will now represent surgery.id for uniqueness
+  id: string;
   name: string;
   surgeryDate: string;
   day: number;
@@ -20,6 +19,7 @@ interface Patient {
   lastUpdate: string;
   alerts?: string[];
   medicalStatus?: string;
+  sex?: string | null;
 }
 
 export default function DoctorDashboard() {
@@ -27,7 +27,6 @@ export default function DoctorDashboard() {
   const queryClient = useQueryClient();
   const { session, isLoading: isAuthLoading, isDoctor, signOut, profile } = useAuth();
   const [filterStatus, setFilterStatus] = useState<PatientStatus>('critical');
-  const [isAddPatientVisible, setIsAddPatientVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
   // Use React Query hook for surgeries
@@ -71,7 +70,8 @@ export default function DoctorDashboard() {
         surgeryType: surgery.surgery_type?.name || 'Não especificado',
         status: patientStatus,
         lastUpdate: new Date(surgery.updated_at || surgery.created_at || new Date()).toLocaleDateString('pt-BR'),
-        alerts: patientStatus === 'critical' ? ['Requer atenção'] : patientStatus === 'warning' ? ['Monitorar'] : undefined
+        alerts: patientStatus === 'critical' ? ['Requer atenção'] : patientStatus === 'warning' ? ['Monitorar'] : undefined,
+        sex: (surgery.patient as any)?.sex || null
       };
     });
   }, [surgeriesData]);
@@ -115,7 +115,7 @@ export default function DoctorDashboard() {
 
       {/* Header */}
       <View
-        className="bg-blue-600 px-6 pb-6 rounded-b-3xl mb-4"
+        className="bg-primary-700 px-6 pb-6 rounded-b-3xl mb-4"
         style={{ paddingTop: insets.top + 12 }}
       >
         <View className="flex-row justify-between items-center">
@@ -154,31 +154,19 @@ export default function DoctorDashboard() {
               status={patient.status}
               lastUpdate={patient.lastUpdate}
               alerts={patient.alerts}
+              sex={patient.sex}
               onPress={() => handlePatientClick(patient.id)}
             />
           ))
         )}
       </ScrollView>
 
-      {/* FAB - Floating Action Button */}
       <TouchableOpacity
-        className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg"
-        onPress={() => setIsAddPatientVisible(true)}
+        className="absolute bottom-6 right-6 w-14 h-14 bg-primary-700 rounded-full items-center justify-center shadow-lg"
+        onPress={() => router.push('/doctor/add-patient' as any)}
       >
         <Plus size={30} color="white" />
       </TouchableOpacity>
-
-      <AddPatientModal
-        visible={isAddPatientVisible}
-        onClose={() => setIsAddPatientVisible(false)}
-        onSuccess={() => {
-          // Refresh patients
-          if (profile?.id) {
-            queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
-            queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
-          }
-        }}
-      />
     </View>
   );
 }

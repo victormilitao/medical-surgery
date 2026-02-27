@@ -103,25 +103,37 @@ export class SupabasePatientService implements IPatientService {
 
     async createPatient(data: {
         name: string;
-        email: string;
+        cpf: string;
+        sex: string;
+        age: string;
+        phone: string;
         surgeryTypeId: string;
         surgeryDate: string;
         doctorId: string;
     }): Promise<{ patientId: string; surgeryId: string }> {
+        // Generate fake email for Supabase Auth (patient logs in via CPF, not email)
+        const fakeEmail = `${data.cpf}@paciente.app`;
+
         // 1. Create the patient using a database RPC to bypass GoTrue's email ratelimit
         const { data: newPatientId, error: authError } = await (supabase as any).rpc('create_patient_bypass', {
-            patient_email: data.email,
+            patient_email: fakeEmail,
             patient_password: 'Password123!', // Paciente vai usar acesso via OTP depois
             patient_name: data.name
         });
 
         if (authError) throw authError;
-        if (!newPatientId) throw new Error('Não foi possível criar o usuário do paciente');
+        if (!newPatientId) throw new Error('N\u00e3o foi poss\u00edvel criar o usu\u00e1rio do paciente');
 
-        // Atualiza a tabela profiles caso a trigger não tenha preenchido o nome corretamente
+        // Update profiles with all patient fields
         await supabase
             .from('profiles')
-            .update({ full_name: data.name, role: 'patient' })
+            .update({
+                full_name: data.name,
+                role: 'patient',
+                cpf: data.cpf,
+                sex: data.sex,
+                phone: data.phone || null
+            })
             .eq('id', newPatientId);
 
         // 3. Create the surgery
@@ -138,7 +150,7 @@ export class SupabasePatientService implements IPatientService {
             .select()
             .single();
 
-        if (surgeryError || !surgeryData) throw surgeryError || new Error('Cirurgia não criada');
+        if (surgeryError || !surgeryData) throw surgeryError || new Error('Cirurgia n\u00e3o criada');
 
         // 4. Create the patient-doctor link
         const { error: patientLinkError } = await supabase

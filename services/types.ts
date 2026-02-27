@@ -10,7 +10,7 @@ export interface PatientWithProfile extends Patient {
 }
 
 export interface SurgeryWithDetails extends Surgery {
-    patient: Pick<Profile, 'full_name' | 'email' | 'phone'>;
+    patient: Pick<Profile, 'full_name' | 'email' | 'phone' | 'sex'>;
     doctor: Pick<Profile, 'full_name'>;
     surgery_type: Pick<SurgeryType, 'name' | 'description' | 'expected_recovery_days'>;
 }
@@ -39,7 +39,10 @@ export interface IPatientService {
     getPatientDashboardData(patientId: string): Promise<PatientDashboardData | null>;
     createPatient(data: {
         name: string;
-        email: string;
+        cpf: string;
+        sex: string;
+        age: string;
+        phone: string;
         surgeryTypeId: string;
         surgeryDate: string;
         doctorId: string;

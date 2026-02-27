@@ -58,7 +58,10 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
     try {
       await patientService.createPatient({
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        cpf: email.trim(), // legacy: using email field as CPF placeholder
+        sex: 'M',
+        age: '0',
+        phone: '',
         surgeryTypeId,
         surgeryDate: formattedDate,
         doctorId: profile.id

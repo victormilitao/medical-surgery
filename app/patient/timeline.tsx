@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -139,19 +139,21 @@ export default function TimelineScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white">
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      <View className="flex-row items-center px-4 py-2 bg-white relative">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="p-2 z-10"
-        >
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
-          <Text className="text-lg font-semibold text-gray-800">Linha do Tempo</Text>
+      <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
+        <View className="flex-row items-center px-4 py-3 relative">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="p-2 z-10"
+          >
+            <ArrowLeft size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+            <Text className="text-lg font-semibold text-white">Linha do Tempo</Text>
+          </View>
         </View>
       </View>
 
@@ -168,7 +170,7 @@ export default function TimelineScreen() {
             disabled={item.status === 'future' || item.status === 'missed'}
             onPress={() => handleDayPress(item)}
             className={`mb-4 p-4 rounded-xl border flex-row items-center justify-between ${item.status === 'future' ? 'bg-gray-50 border-gray-100 opacity-60' :
-              item.status === 'pending' ? 'bg-white border-blue-500 shadow-sm' :
+              item.status === 'pending' ? 'bg-white border-primary-700 shadow-sm' :
                 item.status === 'missed' ? 'bg-gray-100 border-gray-200' :
                   item.alertSeverity === 'critical' ? 'bg-red-50 border-red-200' :
                     item.alertSeverity === 'warning' ? 'bg-yellow-50 border-yellow-200' :
@@ -176,14 +178,14 @@ export default function TimelineScreen() {
               }`}
           >
             <View className="flex-row items-center flex-1">
-              <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-blue-100' :
+              <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-primary-100' :
                 item.status === 'future' ? 'bg-gray-200' :
                   item.status === 'missed' ? 'bg-gray-300' :
                     item.alertSeverity === 'critical' ? 'bg-red-100' :
                       item.alertSeverity === 'warning' ? 'bg-yellow-100' :
                         'bg-green-100'
                 }`}>
-                <Text className={`font-bold ${item.status === 'pending' ? 'text-blue-700' :
+                <Text className={`font-bold ${item.status === 'pending' ? 'text-primary-700' :
                   item.status === 'future' ? 'text-gray-500' :
                     item.status === 'missed' ? 'text-gray-500' :
                       item.alertSeverity === 'critical' ? 'text-red-700' :
@@ -204,7 +206,7 @@ export default function TimelineScreen() {
 
             <View>
               {item.status === 'pending' && (
-                <View className="bg-blue-600 px-3 py-1.5 rounded-full">
+                <View className="bg-primary-700 px-3 py-1.5 rounded-full">
                   <Text className="text-white font-medium text-xs">Responder</Text>
                 </View>
               )}
@@ -215,7 +217,10 @@ export default function TimelineScreen() {
                   ) : item.alertSeverity === 'warning' ? (
                     <Text className="text-yellow-600 font-medium mr-2">Atenção</Text>
                   ) : (
-                    <Text className="text-green-600 font-medium mr-2">Finalizado</Text>
+                    <>
+                      <Text className="text-green-600 font-medium mr-1">Respondido</Text>
+                      <CheckCircle size={16} color="#16A34A" />
+                    </>
                   )}
                   <ChevronRight size={20} color={
                     item.alertSeverity === 'critical' ? '#DC2626' :

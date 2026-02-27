@@ -39,7 +39,7 @@ function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
                 className={`items-center justify-center rounded-xl p-3 shadow-sm bg-white border-2 ${isSelected ? borderColor : 'border-gray-100'}`}
             >
                 <Text className={`text-2xl font-bold ${countColor}`}>{count}</Text>
-                <Text className={`text-xs font-medium ${textColor} text-center`}>{label}</Text>
+                <Text className={`text-xs font-medium ${textColor} text-center`} numberOfLines={1}>{label}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -85,7 +85,7 @@ export function StatsGrid({ counts, selectedStatus, onSelectStatus }: StatsGridP
                 onPress={() => handleSelect('stable')}
             />
             <StatCard
-                label="Finalizado"
+                label="Respondido"
                 count={counts?.finished || 0}
                 color="gray"
                 isSelected={selectedStatus === 'finished'}

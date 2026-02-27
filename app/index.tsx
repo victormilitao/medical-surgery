@@ -1,9 +1,8 @@
 import { Href, Stack, useRouter } from 'expo-router';
-import { FileText, Lock, Mail, Stethoscope, User } from 'lucide-react-native';
+import { FileText, Lock, Stethoscope, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -13,7 +12,7 @@ export default function LoginScreen() {
     const [role, setRole] = useState<'none' | 'patient' | 'doctor'>('none');
 
     // Form states
-    const [email, setEmail] = useState('');
+    const [patientCpf, setPatientCpf] = useState('');
     const [cpf, setCpf] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -29,21 +28,44 @@ export default function LoginScreen() {
         }
     }, [session, profile, isAuthLoading]);
 
+    const formatCPF = (value: string): string => {
+        const digits: string = value.replace(/\D/g, '').slice(0, 11);
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+        if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+        return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    };
+
     const handlePatientLogin = async () => {
-        if (!email) return;
+        const cleanCpf: string = patientCpf.replace(/\D/g, '');
+        if (!cleanCpf || cleanCpf.length !== 11) {
+            Alert.alert('Erro', 'CPF inválido. Deve ter 11 dígitos.');
+            return;
+        }
         setIsLoading(true);
         try {
-            // DEV: Allow password login for ALL users to bypass email rate limits
+            // Find email by CPF
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('cpf', cleanCpf)
+                .single();
+
+            if (profileError || !profileData?.email) {
+                Alert.alert('Erro', 'CPF não encontrado. Verifique com seu médico.');
+                setIsLoading(false);
+                return;
+            }
+
+            // Sign in with the email associated with the CPF
             const { error: devLoginError } = await supabase.auth.signInWithPassword({
-                email,
+                email: profileData.email,
                 password: 'Password123!'
             });
 
             if (devLoginError) {
                 Alert.alert('Erro', devLoginError.message);
             }
-            // If success, auto-redirect triggers from useEffect
-
         } catch (error) {
             Alert.alert('Erro', 'Ocorreu um erro inesperado.');
             console.error(error);
@@ -89,10 +111,10 @@ export default function LoginScreen() {
     };
 
     const renderRoleSelection = () => (
-        <View className="flex-1 justify-center px-6 space-y-5 gap-5">
+        <View className="flex-1 justify-center px-6 space-y-5 gap-10">
             <View className="items-center mb-8">
-                <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-4">
-                    <Stethoscope size={40} color="#2563eb" />
+                <View className="w-20 h-20 bg-primary-100 rounded-full items-center justify-center mb-4">
+                    <Stethoscope size={40} color="#1B3A5C" />
                 </View>
                 <Text className="text-2xl font-bold text-gray-900 text-center">
                     Pós-Operatório Digital
@@ -102,31 +124,19 @@ export default function LoginScreen() {
                 </Text>
             </View>
 
-            <View>
-                <Card className="active:opacity-80">
-                    <Button
-                        title="Sou Paciente"
-                        variant="outline"
-                        className="mb-0 border-0 bg-blue-50"
-                        onPress={() => setRole('patient')}
-                        // @ts-ignore
-                        icon={<User size={24} color="#2563eb" className="mr-2" />}
-                    />
-                </Card>
-            </View>
+            <Button
+                title="Sou Paciente"
+                subtitle="Acompanhar minha recuperação"
+                icon={<User size={22} color="#ffffff" />}
+                onPress={() => setRole('patient')}
+            />
 
-            <View>
-                <Card>
-                    <Button
-                        title="Sou Médico"
-                        variant="outline"
-                        className="mb-0 border-0 bg-blue-50"
-                        onPress={() => setRole('doctor')}
-                        // @ts-ignore
-                        icon={<Stethoscope size={24} color="#2563eb" className="mr-2" />}
-                    />
-                </Card>
-            </View>
+            <Button
+                title="Sou Médico"
+                subtitle="Gerenciar meus pacientes"
+                icon={<Stethoscope size={22} color="#ffffff" />}
+                onPress={() => setRole('doctor')}
+            />
         </View>
     );
 
@@ -142,28 +152,28 @@ export default function LoginScreen() {
             <View className="mb-8">
                 <Text className="text-2xl font-bold text-gray-900">Acesso Paciente</Text>
                 <Text className="text-gray-500 mt-2">
-                    Digite seu e-mail para receber o código de acesso.
+                    Digite seu CPF para acessar.
                 </Text>
             </View>
 
             <View className="space-y-4">
                 <View className="bg-white border border-gray-200 rounded-lg h-12 flex-row items-center px-4">
-                    <Mail size={20} color="#9ca3af" />
+                    <FileText size={20} color="#9ca3af" />
                     <TextInput
                         className="flex-1 ml-3 text-base text-gray-900"
-                        placeholder="Seu e-mail cadastrado"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
+                        placeholder="000.000.000-00"
+                        value={patientCpf}
+                        onChangeText={(v) => setPatientCpf(formatCPF(v))}
+                        keyboardType="numeric"
+                        maxLength={14}
                     />
                 </View>
 
                 <Button
-                    title="Enviar Código de Acesso"
+                    title="Entrar"
                     onPress={handlePatientLogin}
                     isLoading={isLoading}
-                    disabled={!email}
+                    disabled={patientCpf.replace(/\D/g, '').length !== 11}
                     className="mt-4"
                 />
             </View>

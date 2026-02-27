@@ -3,39 +3,47 @@ import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View 
 
 interface ButtonProps extends TouchableOpacityProps {
     title: string;
+    subtitle?: string;
     variant?: 'primary' | 'outline' | 'ghost' | 'danger';
     isLoading?: boolean;
     icon?: React.ReactNode;
     textClassName?: string;
 }
 
-export function Button({ title, variant = 'primary', isLoading, className, icon, textClassName, ...props }: ButtonProps) {
-    let bgClass = 'bg-blue-600';
+export function Button({ title, subtitle, variant = 'primary', isLoading, className, icon, textClassName, ...props }: ButtonProps) {
+    let bgClass = 'bg-primary-700';
     let textClass = 'text-white';
 
     if (variant === 'outline') {
-        bgClass = 'bg-transparent border border-blue-600';
-        textClass = 'text-blue-600';
+        bgClass = 'bg-transparent border border-primary-700';
+        textClass = 'text-primary-700';
     } else if (variant === 'ghost') {
         bgClass = 'bg-transparent';
-        textClass = 'text-blue-600';
+        textClass = 'text-primary-700';
     } else if (variant === 'danger') {
         bgClass = 'bg-red-500';
         textClass = 'text-white';
     }
 
+    const heightClass = subtitle ? 'py-4' : 'h-12';
+
     return (
         <TouchableOpacity
-            className={`h-12 flex-row items-center justify-center rounded-lg px-6 ${bgClass} ${className} ${props.disabled ? 'opacity-50' : ''}`}
+            className={`${heightClass} flex-row items-center justify-center rounded-lg px-6 ${bgClass} ${className} ${props.disabled ? 'opacity-50' : ''}`}
             disabled={isLoading || props.disabled}
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? '#2563eb' : 'white'} />
+                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? '#1B3A5C' : 'white'} />
             ) : (
-                <View className="flex-row items-center gap-2">
-                    {icon}
-                    <Text className={`font-semibold text-base ${textClass} ${textClassName ?? ''}`}>{title}</Text>
+                <View className="items-center gap-1">
+                    <View className="flex-row items-center gap-2">
+                        {icon}
+                        <Text className={`font-semibold text-base ${textClass} ${textClassName ?? ''}`}>{title}</Text>
+                    </View>
+                    {subtitle && (
+                        <Text className={`text-sm ${textClass}`}>{subtitle}</Text>
+                    )}
                 </View>
             )}
         </TouchableOpacity>

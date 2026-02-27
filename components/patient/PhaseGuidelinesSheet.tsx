@@ -5,6 +5,7 @@ import { Animated, Dimensions, Pressable, ScrollView, Text, View } from 'react-n
 interface PhaseGuidelinesSheetProps {
   visible: boolean;
   onClose: () => void;
+  currentDay?: number;
 }
 
 type Phase = '0-3' | '4-7' | '8-14';
@@ -12,11 +13,23 @@ type Phase = '0-3' | '4-7' | '8-14';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.87;
 
-export function PhaseGuidelinesSheet({ visible, onClose }: PhaseGuidelinesSheetProps) {
-  const [activePhase, setActivePhase] = useState<Phase>('0-3');
+function getPhaseForDay(day?: number): Phase {
+  if (!day || day <= 3) return '0-3';
+  if (day <= 7) return '4-7';
+  return '8-14';
+}
+
+export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuidelinesSheetProps) {
+  const [activePhase, setActivePhase] = useState<Phase>(() => getPhaseForDay(currentDay));
   const [mounted, setMounted] = useState(false);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (currentDay !== undefined) {
+      setActivePhase(getPhaseForDay(currentDay));
+    }
+  }, [currentDay]);
 
   useEffect(() => {
     if (visible) {
@@ -108,28 +121,12 @@ export function PhaseGuidelinesSheet({ visible, onClose }: PhaseGuidelinesSheetP
           </Pressable>
         </View>
 
-        {/* Tabs */}
+        {/* Tabs - removed, showing only current phase */}
         <View className="px-6 mb-6">
-          <View className="flex-row bg-gray-100 p-1 rounded-2xl">
-            {phases.map((phase) => (
-              <Pressable
-                key={phase.id}
-                onPress={() => setActivePhase(phase.id)}
-                style={[
-                  { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
-                  activePhase === phase.id ? { backgroundColor: 'white' } : {},
-                ]}
-              >
-                <Text
-                  style={[
-                    { fontWeight: '600' },
-                    activePhase === phase.id ? { color: '#111827' } : { color: '#6b7280' },
-                  ]}
-                >
-                  {phase.label}
-                </Text>
-              </Pressable>
-            ))}
+          <View className="bg-primary-100 p-3 rounded-2xl items-center">
+            <Text style={{ fontWeight: '600', color: '#1B3A5C' }}>
+              {phases.find(p => p.id === activePhase)?.label || ''} (Fase Atual)
+            </Text>
           </View>
         </View>
 
@@ -138,7 +135,7 @@ export function PhaseGuidelinesSheet({ visible, onClose }: PhaseGuidelinesSheetP
           <View className="px-6">
             <View style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 24, padding: 24, overflow: 'hidden' }}>
               {/* Left Accent Border */}
-              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#2563eb', borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
+              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#1B3A5C', borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
 
               {activePhase === '0-3' && (
                 <View>

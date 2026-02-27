@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react-native';
+import { CheckCircle, ChevronRight, User } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
@@ -12,6 +12,7 @@ interface PatientListItemProps {
     status: PatientStatus;
     lastUpdate: string;
     alerts?: string[];
+    sex?: string | null;
     onPress: () => void;
 }
 
@@ -22,6 +23,7 @@ export function PatientListItem({
     status,
     lastUpdate,
     alerts = [],
+    sex,
     onPress
 }: PatientListItemProps) {
 
@@ -39,7 +41,7 @@ export function PatientListItem({
         badgeVariant = 'warning';
     } else if (status === 'finished') {
         statusColor = '#3b82f6'; // blue
-        statusLabel = 'Finalizado';
+        statusLabel = 'Respondido';
         badgeVariant = 'success';
     } else {
         badgeVariant = 'success'; // stable is green
@@ -49,9 +51,16 @@ export function PatientListItem({
         <TouchableOpacity onPress={onPress}>
             <Card className="mb-3 border-l-4" style={{ borderLeftColor: statusColor }}>
                 <View className="flex-row justify-between items-start mb-2">
-                    <View>
-                        <Text className="text-gray-900 font-bold text-lg">{name}</Text>
-                        <Text className="text-gray-500 text-sm">Cirurgia: {surgeryDate}</Text>
+                    <View className="flex-row items-center flex-1">
+                        <User
+                            size={20}
+                            color={sex === 'F' ? '#EC4899' : '#3B82F6'}
+                            style={{ marginRight: 6 }}
+                        />
+                        <View>
+                            <Text className="text-gray-900 font-bold text-lg">{name}</Text>
+                            <Text className="text-gray-500 text-sm">Cirurgia: {surgeryDate}</Text>
+                        </View>
                     </View>
                     <Badge label={`Dia ${day}`} variant="default" />
                 </View>
@@ -70,6 +79,7 @@ export function PatientListItem({
                     <View className="flex-row items-center">
                         <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
                         <Text className="text-gray-600 text-sm">{statusLabel}</Text>
+                        {status === 'finished' && <CheckCircle size={14} color="#3b82f6" style={{ marginLeft: 4 }} />}
                     </View>
                     <View className="flex-row items-center">
                         <Text className="text-gray-400 text-xs mr-2">Atualizado: {lastUpdate}</Text>
