@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
 import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Collapsible } from '@/components/ui/collapsible';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/theme';
 
 export default function TabTwoScreen() {
@@ -16,7 +17,7 @@ export default function TabTwoScreen() {
       headerImage={
         <IconSymbol
           size={310}
-          color="#808080"
+          color={Colors.gray[400]}
           name="chevron.left.forwardslash.chevron.right"
           style={styles.headerImage}
         />
@@ -100,7 +101,7 @@ export default function TabTwoScreen() {
 
 const styles = StyleSheet.create({
   headerImage: {
-    color: '#808080',
+    color: Colors.gray[400],
     bottom: -90,
     left: -35,
     position: 'absolute',

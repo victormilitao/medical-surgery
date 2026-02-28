@@ -8,6 +8,7 @@ import { PhaseGuidelinesSheet } from '../../components/patient/PhaseGuidelinesSh
 import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { usePatientDashboard } from '../../hooks/usePatientDashboard';
 import { reportService } from '../../services';
@@ -88,7 +89,7 @@ export default function PatientDashboard() {
                             title="Sair"
                             variant="ghost"
                             onPress={handleLogout}
-                            icon={<LogOut size={16} color="#fff" />}
+                            icon={<LogOut size={16} color={Colors.white} />}
                             className="h-8 px-2 rounded-xl"
                             textClassName="text-white"
                         />
@@ -126,7 +127,7 @@ export default function PatientDashboard() {
                         subtitle="Responda suas perguntas diárias"
                         // @ts-ignore
                         icon={FileText}
-                        iconColor="#166534"
+                        iconColor={Colors.status.successDark}
                         iconBgColor="bg-green-100"
                         actionLabel="Responder"
                         onPress={handleDailyReportPress}
@@ -143,7 +144,7 @@ export default function PatientDashboard() {
                         subtitle="O que esperar em cada período"
                         // @ts-ignore
                         icon={Info}
-                        iconColor="#9333ea"
+                        iconColor={Colors.accent.purple}
                         iconBgColor="bg-purple-100"
                         onPress={() => setIsGuidelinesVisible(true)}
                     />

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { patientService, questionService, reportService } from '../../services';
 import { QuestionWithDetails } from '../../services/types';
@@ -162,7 +163,7 @@ export default function DailyReportScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#1B3A5C" />
+        <ActivityIndicator size="large" color={Colors.primary.main} />
       </View>
     );
   }
@@ -178,7 +179,7 @@ export default function DailyReportScreen() {
             onPress={() => router.back()}
             className="p-2 z-10"
           >
-            <ArrowLeft size={24} color="#ffffff" />
+            <ArrowLeft size={24} color={Colors.white} />
           </TouchableOpacity>
           <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
             <Text className="text-lg font-semibold text-white">Relatório Diário</Text>
@@ -212,9 +213,9 @@ export default function DailyReportScreen() {
                   step={1}
                   value={answers[question.id] ? parseInt(answers[question.id]) : 0}
                   onValueChange={(val) => handleAnswerChange(question.id, val.toString())}
-                  minimumTrackTintColor="#1B3A5C"
-                  maximumTrackTintColor="#d1d5db"
-                  thumbTintColor="#1B3A5C"
+                  minimumTrackTintColor={Colors.primary.main}
+                  maximumTrackTintColor={Colors.gray[300]}
+                  thumbTintColor={Colors.primary.main}
                 />
               </View>
             )}
@@ -292,7 +293,7 @@ export default function DailyReportScreen() {
             }`}
         >
           {submitting ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={Colors.white} />
           ) : (
             <Text className="text-white font-bold text-lg">Enviar Respostas</Text>
           )}

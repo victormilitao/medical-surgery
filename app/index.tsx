@@ -3,6 +3,7 @@ import { FileText, Lock, Stethoscope, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { Button } from '../components/ui/Button';
+import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -114,7 +115,7 @@ export default function LoginScreen() {
         <View className="flex-1 justify-center px-6 space-y-5 gap-10">
             <View className="items-center mb-8">
                 <View className="w-20 h-20 bg-white/20 rounded-full items-center justify-center mb-4">
-                    <Stethoscope size={40} color="#ffffff" />
+                    <Stethoscope size={40} color={Colors.white} />
                 </View>
                 <Text className="text-2xl font-bold text-white text-center">
                     Pós-Operatório Digital
@@ -127,7 +128,7 @@ export default function LoginScreen() {
             <Button
                 title="Sou Paciente"
                 subtitle="Acompanhar minha recuperação"
-                icon={<User size={22} color="#1B3A5C" />}
+                icon={<User size={22} color={Colors.primary.main} />}
                 onPress={() => setRole('patient')}
                 variant="light"
             />
@@ -135,7 +136,7 @@ export default function LoginScreen() {
             <Button
                 title="Sou Médico"
                 subtitle="Gerenciar meus pacientes"
-                icon={<Stethoscope size={22} color="#1B3A5C" />}
+                icon={<Stethoscope size={22} color={Colors.primary.main} />}
                 onPress={() => setRole('doctor')}
                 variant="light"
             />
@@ -160,7 +161,7 @@ export default function LoginScreen() {
 
             <View className="space-y-4">
                 <View className="bg-white border border-gray-200 rounded-lg h-12 flex-row items-center px-4">
-                    <FileText size={20} color="#9ca3af" />
+                    <FileText size={20} color={Colors.gray[400]} />
                     <TextInput
                         className="flex-1 ml-3 text-base text-gray-900"
                         placeholder="000.000.000-00"
@@ -200,7 +201,7 @@ export default function LoginScreen() {
 
             <View className="space-y-4">
                 <View className="bg-white border border-gray-200 rounded-lg h-12 flex-row items-center px-4 mb-3">
-                    <FileText size={20} color="#9ca3af" />
+                    <FileText size={20} color={Colors.gray[400]} />
                     <TextInput
                         className="flex-1 ml-3 text-base text-gray-900"
                         placeholder="CPF"
@@ -211,7 +212,7 @@ export default function LoginScreen() {
                 </View>
 
                 <View className="bg-white border border-gray-200 rounded-lg h-12 flex-row items-center px-4">
-                    <Lock size={20} color="#9ca3af" />
+                    <Lock size={20} color={Colors.gray[400]} />
                     <TextInput
                         className="flex-1 ml-3 text-base text-gray-900"
                         placeholder="Senha"

@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { patientService, reportService } from '../../services';
 
@@ -133,7 +134,7 @@ export default function TimelineScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#00BFA5" />
+        <ActivityIndicator size="large" color={Colors.accent.teal} />
       </View>
     );
   }
@@ -149,7 +150,7 @@ export default function TimelineScreen() {
             onPress={() => router.back()}
             className="p-2 z-10"
           >
-            <ArrowLeft size={24} color="#ffffff" />
+            <ArrowLeft size={24} color={Colors.white} />
           </TouchableOpacity>
           <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
             <Text className="text-lg font-semibold text-white">Linha do Tempo</Text>
@@ -219,13 +220,13 @@ export default function TimelineScreen() {
                   ) : (
                     <>
                       <Text className="text-green-600 font-medium mr-1">Respondido</Text>
-                      <CheckCircle size={16} color="#16A34A" />
+                      <CheckCircle size={16} color={Colors.status.success} />
                     </>
                   )}
                   <ChevronRight size={20} color={
-                    item.alertSeverity === 'critical' ? '#DC2626' :
-                      item.alertSeverity === 'warning' ? '#D97706' :
-                        '#16A34A'
+                    item.alertSeverity === 'critical' ? Colors.status.critical :
+                      item.alertSeverity === 'warning' ? Colors.status.warning :
+                        Colors.status.success
                   } />
                 </View>
               )}

@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import React from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 
@@ -37,7 +38,7 @@ export function Button({ title, subtitle, variant = 'primary', isLoading, classN
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? '#1B3A5C' : 'white'} />
+                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? Colors.primary.main : Colors.white} />
             ) : (
                 <View className="items-center gap-1">
                     <View className="flex-row items-center gap-2">

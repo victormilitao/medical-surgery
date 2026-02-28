@@ -7,6 +7,7 @@ import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle } from 'lucide-react
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors } from '../../../constants/Colors';
 import { useAuth } from '../../../context/AuthContext';
 import { patientService, questionService, reportService } from '../../../services';
 import { DailyReport, QuestionWithDetails } from '../../../services/types';
@@ -90,7 +91,7 @@ export default function ReportHistoryScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#00BFA5" />
+        <ActivityIndicator size="large" color={Colors.accent.teal} />
       </View>
     );
   }
@@ -111,7 +112,7 @@ export default function ReportHistoryScreen() {
           onPress={() => router.back()}
           className="p-2 z-10"
         >
-          <ArrowLeft size={24} color="#374151" />
+          <ArrowLeft size={24} color={Colors.gray[700]} />
         </TouchableOpacity>
 
         <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
@@ -132,9 +133,9 @@ export default function ReportHistoryScreen() {
             hasWarningAlert ? 'bg-yellow-100' :
               'bg-green-100'
             }`}>
-            {hasCriticalAlert ? <AlertCircle size={20} color="#DC2626" /> :
-              hasWarningAlert ? <AlertTriangle size={20} color="#D97706" /> :
-                <CheckCircle size={20} color="#16A34A" />
+            {hasCriticalAlert ? <AlertCircle size={20} color={Colors.status.critical} /> :
+              hasWarningAlert ? <AlertTriangle size={20} color={Colors.status.warning} /> :
+                <CheckCircle size={20} color={Colors.status.success} />
             }
           </View>
           <View className="flex-1">
@@ -187,8 +188,8 @@ export default function ReportHistoryScreen() {
                   step={1}
                   value={report.answers[question.id] ? parseInt(report.answers[question.id]) : 0}
                   disabled={true}
-                  minimumTrackTintColor={(report.answers[question.id] || 0) > 5 ? "#EF4444" : "#00BFA5"}
-                  thumbTintColor={(report.answers[question.id] || 0) > 5 ? "#EF4444" : "#00BFA5"}
+                  minimumTrackTintColor={(report.answers[question.id] || 0) > 5 ? Colors.status.danger : Colors.accent.teal}
+                  thumbTintColor={(report.answers[question.id] || 0) > 5 ? Colors.status.danger : Colors.accent.teal}
                 />
               </View>
             )}

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { patientService } from '../../services';
@@ -150,7 +151,7 @@ export default function AddPatientScreen() {
       <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
         <View className="flex-row items-center px-4 py-3 relative">
           <TouchableOpacity onPress={() => router.back()} className="p-2 z-10">
-            <ArrowLeft size={24} color="#ffffff" />
+            <ArrowLeft size={24} color={Colors.white} />
           </TouchableOpacity>
           <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
             <Text className="text-lg font-semibold text-white">Novo Paciente</Text>
@@ -252,7 +253,7 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Procedimento *</Text>
             {loadingTypes ? (
-              <ActivityIndicator size="small" color="#1B3A5C" />
+              <ActivityIndicator size="small" color={Colors.primary.main} />
             ) : (
               <View className="flex-row flex-wrap gap-2">
                 {surgeryTypes.map((type) => (

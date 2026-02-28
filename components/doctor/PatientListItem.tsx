@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { CheckCircle, ChevronRight, User } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Badge } from '../ui/Badge';
@@ -27,20 +28,20 @@ export function PatientListItem({
     onPress
 }: PatientListItemProps) {
 
-    let statusColor = '#22c55e'; // green
+    let statusColor: string = Colors.status.active; // green
     let statusLabel = 'Estável';
     let badgeVariant: 'default' | 'critical' | 'warning' | 'success' = 'default';
 
     if (status === 'critical') {
-        statusColor = '#ef4444'; // red
+        statusColor = Colors.status.danger; // red
         statusLabel = 'Crítico';
         badgeVariant = 'critical';
     } else if (status === 'warning') {
-        statusColor = '#eab308'; // yellow
+        statusColor = Colors.status.caution; // yellow
         statusLabel = 'Atenção';
         badgeVariant = 'warning';
     } else if (status === 'finished') {
-        statusColor = '#3b82f6'; // blue
+        statusColor = Colors.accent.blueMedium; // blue
         statusLabel = 'Respondido';
         badgeVariant = 'success';
     } else {
@@ -54,7 +55,7 @@ export function PatientListItem({
                     <View className="flex-row items-center flex-1">
                         <User
                             size={20}
-                            color={sex === 'F' ? '#EC4899' : '#3B82F6'}
+                            color={sex === 'F' ? Colors.accent.pink : Colors.accent.blueMedium}
                             style={{ marginRight: 6 }}
                         />
                         <View>
@@ -79,11 +80,11 @@ export function PatientListItem({
                     <View className="flex-row items-center">
                         <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
                         <Text className="text-gray-600 text-sm">{statusLabel}</Text>
-                        {status === 'finished' && <CheckCircle size={14} color="#3b82f6" style={{ marginLeft: 4 }} />}
+                        {status === 'finished' && <CheckCircle size={14} color={Colors.accent.blueMedium} style={{ marginLeft: 4 }} />}
                     </View>
                     <View className="flex-row items-center">
                         <Text className="text-gray-400 text-xs mr-2">Atualizado: {lastUpdate}</Text>
-                        <ChevronRight size={16} color="#9ca3af" />
+                        <ChevronRight size={16} color={Colors.gray[400]} />
                     </View>
                 </View>
             </Card>

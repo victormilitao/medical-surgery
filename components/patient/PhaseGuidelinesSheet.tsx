@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { X } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
@@ -117,14 +118,14 @@ export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuid
             onPress={onClose}
             className="p-2 -mr-2 -mt-2 bg-gray-100 rounded-full"
           >
-            <X size={20} color="#6b7280" />
+            <X size={20} color={Colors.gray[500]} />
           </Pressable>
         </View>
 
         {/* Tabs - removed, showing only current phase */}
         <View className="px-6 mb-6">
           <View className="bg-primary-100 p-3 rounded-2xl items-center">
-            <Text style={{ fontWeight: '600', color: '#1B3A5C' }}>
+            <Text style={{ fontWeight: '600', color: Colors.primary.main }}>
               {phases.find(p => p.id === activePhase)?.label || ''} (Fase Atual)
             </Text>
           </View>
@@ -133,9 +134,9 @@ export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuid
         {/* Content */}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6">
-            <View style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 24, padding: 24, overflow: 'hidden' }}>
+            <View style={{ backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.gray[100], borderRadius: 24, padding: 24, overflow: 'hidden' }}>
               {/* Left Accent Border */}
-              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#1B3A5C', borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
+              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: Colors.primary.main, borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
 
               {activePhase === '0-3' && (
                 <View>

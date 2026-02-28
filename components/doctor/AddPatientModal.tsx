@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -102,7 +103,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
           <View className="flex-row justify-between items-center p-6 border-b border-gray-100">
             <Text className="text-xl font-bold text-gray-900">Adicionar Paciente</Text>
             <TouchableOpacity onPress={handleClose} disabled={isSubmitting}>
-              <X color="#9ca3af" size={24} />
+              <X color={Colors.gray[400]} size={24} />
             </TouchableOpacity>
           </View>
 

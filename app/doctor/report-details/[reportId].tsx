@@ -6,6 +6,7 @@ import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle, ChevronDown, Chevro
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors } from '../../../constants/Colors';
 import { useAuth } from '../../../context/AuthContext';
 import { questionService, reportService, surgeryService } from '../../../services';
 import { DailyReport, QuestionWithDetails } from '../../../services/types';
@@ -123,7 +124,7 @@ export default function DoctorReportDetailsScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#1B3A5C" />
+        <ActivityIndicator size="large" color={Colors.primary.main} />
       </View>
     );
   }
@@ -143,7 +144,7 @@ export default function DoctorReportDetailsScreen() {
       <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
         <View className="flex-row items-center px-4 py-3 relative">
           <TouchableOpacity onPress={() => router.back()} className="p-2 z-10">
-            <ArrowLeft size={24} color="#ffffff" />
+            <ArrowLeft size={24} color={Colors.white} />
           </TouchableOpacity>
           <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
             <Text className="text-lg font-semibold text-white">Respostas do Paciente</Text>
@@ -170,11 +171,11 @@ export default function DoctorReportDetailsScreen() {
                 }`}
             >
               {hasCriticalAlert ? (
-                <AlertCircle size={20} color="#DC2626" />
+                <AlertCircle size={20} color={Colors.status.critical} />
               ) : hasWarningAlert ? (
-                <AlertTriangle size={20} color="#D97706" />
+                <AlertTriangle size={20} color={Colors.status.warning} />
               ) : (
-                <CheckCircle size={20} color="#16A34A" />
+                <CheckCircle size={20} color={Colors.status.success} />
               )}
             </View>
             <View className="flex-1">
@@ -220,14 +221,14 @@ export default function DoctorReportDetailsScreen() {
           className="flex-row items-center justify-center bg-white border border-gray-200 rounded-xl py-3 px-4 mb-4"
           onPress={() => setShowAnswers(!showAnswers)}
         >
-          <ClipboardList size={20} color="#1B3A5C" />
+          <ClipboardList size={20} color={Colors.primary.main} />
           <Text className="text-primary-700 font-semibold ml-2">
             {showAnswers ? 'Ocultar Respostas' : 'Ver Respostas'}
           </Text>
           {showAnswers ? (
-            <ChevronUp size={20} color="#1B3A5C" style={{ marginLeft: 4 }} />
+            <ChevronUp size={20} color={Colors.primary.main} style={{ marginLeft: 4 }} />
           ) : (
-            <ChevronDown size={20} color="#1B3A5C" style={{ marginLeft: 4 }} />
+            <ChevronDown size={20} color={Colors.primary.main} style={{ marginLeft: 4 }} />
           )}
         </TouchableOpacity>
 

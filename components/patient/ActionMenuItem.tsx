@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -16,7 +17,7 @@ export function ActionMenuItem({
     subtitle,
     icon: Icon,
     onPress,
-    iconColor = "#2563eb",
+    iconColor = Colors.accent.blue,
     iconBgColor = "bg-blue-100",
     actionLabel
 }: ActionMenuItemProps) {
@@ -39,7 +40,7 @@ export function ActionMenuItem({
                     <Text className="text-blue-700 font-medium text-xs">{actionLabel}</Text>
                 </View>
             ) : (
-                <ChevronRight size={20} color="#9ca3af" />
+                <ChevronRight size={20} color={Colors.gray[400]} />
             )}
         </TouchableOpacity>
     );

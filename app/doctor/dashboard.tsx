@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PatientListItem, PatientStatus } from '../../components/doctor/PatientListItem';
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { useSurgeriesByDoctor } from '../../hooks/useSurgeries';
 
@@ -124,7 +125,7 @@ export default function DoctorDashboard() {
             title="Sair"
             variant="ghost"
             onPress={handleLogout}
-            icon={<LogOut size={16} color="#fff" />}
+            icon={<LogOut size={16} color={Colors.white} />}
             className="h-8 px-2 rounded-xl"
             textClassName="text-white"
           />
@@ -165,7 +166,7 @@ export default function DoctorDashboard() {
         className="absolute bottom-6 right-6 w-14 h-14 bg-primary-700 rounded-full items-center justify-center shadow-lg"
         onPress={() => router.push('/doctor/add-patient' as any)}
       >
-        <Plus size={30} color="white" />
+        <Plus size={30} color={Colors.white} />
       </TouchableOpacity>
     </View>
   );
