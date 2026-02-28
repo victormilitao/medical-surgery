@@ -4,7 +4,7 @@ import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View 
 interface ButtonProps extends TouchableOpacityProps {
     title: string;
     subtitle?: string;
-    variant?: 'primary' | 'outline' | 'ghost' | 'danger';
+    variant?: 'primary' | 'outline' | 'ghost' | 'danger' | 'light';
     isLoading?: boolean;
     icon?: React.ReactNode;
     textClassName?: string;
@@ -23,6 +23,9 @@ export function Button({ title, subtitle, variant = 'primary', isLoading, classN
     } else if (variant === 'danger') {
         bgClass = 'bg-red-500';
         textClass = 'text-white';
+    } else if (variant === 'light') {
+        bgClass = 'bg-white';
+        textClass = 'text-primary-700';
     }
 
     const heightClass = subtitle ? 'py-4' : 'h-12';
@@ -42,7 +45,7 @@ export function Button({ title, subtitle, variant = 'primary', isLoading, classN
                         <Text className={`font-semibold text-base ${textClass} ${textClassName ?? ''}`}>{title}</Text>
                     </View>
                     {subtitle && (
-                        <Text className={`text-sm ${textClass}`}>{subtitle}</Text>
+                        <Text className={`text-sm ${textClass} ${textClassName ?? ''}`}>{subtitle}</Text>
                     )}
                 </View>
             )}

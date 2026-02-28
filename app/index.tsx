@@ -113,13 +113,13 @@ export default function LoginScreen() {
     const renderRoleSelection = () => (
         <View className="flex-1 justify-center px-6 space-y-5 gap-10">
             <View className="items-center mb-8">
-                <View className="w-20 h-20 bg-primary-100 rounded-full items-center justify-center mb-4">
-                    <Stethoscope size={40} color="#1B3A5C" />
+                <View className="w-20 h-20 bg-white/20 rounded-full items-center justify-center mb-4">
+                    <Stethoscope size={40} color="#ffffff" />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900 text-center">
+                <Text className="text-2xl font-bold text-white text-center">
                     Pós-Operatório Digital
                 </Text>
-                <Text className="text-gray-500 text-center mt-2">
+                <Text className="text-white/70 text-center mt-2">
                     Acompanhamento seguro para sua recuperação
                 </Text>
             </View>
@@ -127,15 +127,17 @@ export default function LoginScreen() {
             <Button
                 title="Sou Paciente"
                 subtitle="Acompanhar minha recuperação"
-                icon={<User size={22} color="#ffffff" />}
+                icon={<User size={22} color="#1B3A5C" />}
                 onPress={() => setRole('patient')}
+                variant="light"
             />
 
             <Button
                 title="Sou Médico"
                 subtitle="Gerenciar meus pacientes"
-                icon={<Stethoscope size={22} color="#ffffff" />}
+                icon={<Stethoscope size={22} color="#1B3A5C" />}
                 onPress={() => setRole('doctor')}
+                variant="light"
             />
         </View>
     );
@@ -233,7 +235,7 @@ export default function LoginScreen() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-gray-50"
+            className={`flex-1 ${role === 'none' ? 'bg-primary-700' : 'bg-gray-50'}`}
         >
             <Stack.Screen options={{ headerShown: false }} />
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
