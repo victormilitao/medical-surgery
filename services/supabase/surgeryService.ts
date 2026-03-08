@@ -10,7 +10,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .from('surgeries')
       .select(`
                 *,
-                patient:profiles!surgeries_patient_id_fkey(full_name, email, phone),
+                patient:profiles!surgeries_patient_id_fkey(full_name, email, phone, sex),
                 doctor:profiles!surgeries_doctor_id_fkey(full_name),
                 surgery_type:surgery_types(name, description, expected_recovery_days)
             `)
@@ -34,7 +34,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .from('surgeries')
       .select(`
                 *,
-                patient:profiles!surgeries_patient_id_fkey(full_name, email, phone),
+                patient:profiles!surgeries_patient_id_fkey(full_name, email, phone, sex),
                 doctor:profiles!surgeries_doctor_id_fkey(full_name),
                 surgery_type:surgery_types(name, description, expected_recovery_days)
             `)
@@ -68,7 +68,8 @@ export class SupabaseSurgeryService implements ISurgeryService {
         surgery_type_id: data.surgeryTypeId,
         surgery_date: data.surgeryDate,
         notes: data.notes,
-        status: 'active'
+        status: 'active',
+        medical_status: 'stable' as const
       })
       .select()
       .single();

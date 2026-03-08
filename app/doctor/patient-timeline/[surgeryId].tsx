@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -130,21 +130,23 @@ export default function DoctorPatientTimelineScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white">
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      <View className="flex-row items-center px-4 py-2 bg-white relative">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="p-2 z-10"
-        >
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
-          <Text className="text-lg font-semibold text-gray-800">
-            {surgery?.patient.full_name || 'Linha do Tempo'}
-          </Text>
+      <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
+        <View className="flex-row items-center px-4 py-3 relative">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="p-2 z-10"
+          >
+            <ArrowLeft size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+            <Text className="text-lg font-semibold text-white">
+              {surgery?.patient.full_name || 'Linha do Tempo'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -203,7 +205,10 @@ export default function DoctorPatientTimelineScreen() {
                   ) : item.alertSeverity === 'warning' ? (
                     <Text className="text-yellow-600 font-medium mr-2">Atenção</Text>
                   ) : (
-                    <Text className="text-green-600 font-medium mr-2">Estável</Text>
+                    <>
+                      <Text className="text-green-600 font-medium mr-1">Respondido</Text>
+                      <CheckCircle size={16} color="#16A34A" />
+                    </>
                   )}
                   <ChevronRight size={20} color={
                     item.alertSeverity === 'critical' ? '#DC2626' :

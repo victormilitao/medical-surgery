@@ -162,25 +162,27 @@ export default function DailyReportScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#1B3A5C" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      <StatusBar style="dark" />
+    <View className="flex-1 bg-white">
+      <StatusBar style="light" />
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View className="flex-row items-center px-4 py-2 bg-white relative">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="p-2 z-10"
-        >
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
-          <Text className="text-lg font-semibold text-gray-800">Relatório Diário</Text>
+      <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
+        <View className="flex-row items-center px-4 py-3 relative">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="p-2 z-10"
+          >
+            <ArrowLeft size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+            <Text className="text-lg font-semibold text-white">Relatório Diário</Text>
+          </View>
         </View>
       </View>
 
@@ -210,9 +212,9 @@ export default function DailyReportScreen() {
                   step={1}
                   value={answers[question.id] ? parseInt(answers[question.id]) : 0}
                   onValueChange={(val) => handleAnswerChange(question.id, val.toString())}
-                  minimumTrackTintColor="#2563EB"
+                  minimumTrackTintColor="#1B3A5C"
                   maximumTrackTintColor="#d1d5db"
-                  thumbTintColor="#2563EB"
+                  thumbTintColor="#1B3A5C"
                 />
               </View>
             )}
@@ -225,11 +227,11 @@ export default function DailyReportScreen() {
                     key={option.id}
                     onPress={() => handleAnswerChange(question.id, option.value)}
                     className={`flex-1 py-3 px-4 rounded-lg flex-row justify-center items-center border ${answers[question.id] === option.value
-                      ? 'bg-blue-50 border-blue-600'
+                      ? 'bg-primary-100 border-primary-700'
                       : 'bg-gray-50 border-gray-200'
                       }`}
                   >
-                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-blue-700' : 'text-gray-600'}`}>
+                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-primary-700' : 'text-gray-600'}`}>
                       {option.label}
                     </Text>
                   </TouchableOpacity>
@@ -245,15 +247,15 @@ export default function DailyReportScreen() {
                     key={option.id}
                     onPress={() => handleAnswerChange(question.id, option.value)}
                     className={`w-full py-3 px-4 rounded-lg flex-row items-center ${answers[question.id] === option.value
-                      ? 'bg-blue-50'
+                      ? 'bg-primary-100'
                       : 'bg-white'
                       }`}
                   >
-                    <View className={`w-5 h-5 rounded-full border mr-3 justify-center items-center ${answers[question.id] === option.value ? 'border-blue-600' : 'border-gray-300'
+                    <View className={`w-5 h-5 rounded-full border mr-3 justify-center items-center ${answers[question.id] === option.value ? 'border-primary-700' : 'border-gray-300'
                       }`}>
-                      {answers[question.id] === option.value && <View className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                      {answers[question.id] === option.value && <View className="w-2.5 h-2.5 rounded-full bg-primary-700" />}
                     </View>
-                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-blue-700' : 'text-gray-600'}`}>
+                    <Text className={`font-medium ${answers[question.id] === option.value ? 'text-primary-700' : 'text-gray-600'}`}>
                       {option.label}
                     </Text>
                   </TouchableOpacity>
@@ -286,7 +288,7 @@ export default function DailyReportScreen() {
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={submitting}
-          className={`w-full py-4 rounded-xl items-center mb-12 ${submitting ? 'bg-gray-400' : 'bg-blue-600'
+          className={`w-full py-4 rounded-xl items-center mb-12 ${submitting ? 'bg-gray-400' : 'bg-primary-700'
             }`}
         >
           {submitting ? (
