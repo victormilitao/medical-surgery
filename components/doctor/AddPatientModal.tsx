@@ -47,13 +47,30 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
     setError(null);
 
     // Convert DD/MM/YYYY to YYYY-MM-DD for Supabase
-    const [day, month, year] = surgeryDate.split('/');
-    if (!day || !month || !year || year.length !== 4) {
+    const dateDigits: string = surgeryDate.replace(/\D/g, '');
+    if (dateDigits.length !== 8) {
       setError('Formato de data inválido. Use DD/MM/AAAA.');
       setIsSubmitting(false);
       return;
     }
-    const formattedDate = `${year}-${month}-${day}`;
+
+    const dayNum: number = parseInt(dateDigits.slice(0, 2), 10);
+    const monthNum: number = parseInt(dateDigits.slice(2, 4), 10);
+    const yearNum: number = parseInt(dateDigits.slice(4, 8), 10);
+
+    const parsedDate: Date = new Date(yearNum, monthNum - 1, dayNum);
+    const isValidDate: boolean =
+      parsedDate.getFullYear() === yearNum &&
+      parsedDate.getMonth() === monthNum - 1 &&
+      parsedDate.getDate() === dayNum;
+
+    if (!isValidDate) {
+      setError('Data inválida. Verifique o dia, mês e ano informados.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const formattedDate: string = `${String(yearNum)}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 
     try {
       await patientService.createPatient({
@@ -120,7 +137,8 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
               <View className="z-10">
                 <Text className="text-sm font-semibold text-gray-700 mb-1">Nome:</Text>
                 <TextInput
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900"
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 text-gray-900"
+                  style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
                   placeholder="Nome completo do paciente..."
                   value={name}
                   onChangeText={setName}
@@ -130,7 +148,8 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
               <View className="z-20">
                 <Text className="text-sm font-semibold text-gray-700 mb-1">E-mail corporativo/pessoal:</Text>
                 <TextInput
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900"
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 text-gray-900"
+                  style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
                   placeholder="E-mail para login do paciente..."
                   value={email}
                   onChangeText={setEmail}
@@ -178,7 +197,8 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
               <View className="z-10">
                 <Text className="text-sm font-semibold text-gray-700 mb-1">Data da Cirurgia (DD/MM/AAAA):</Text>
                 <TextInput
-                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900"
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 text-gray-900"
+                  style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
                   placeholder="DD/MM/AAAA"
                   value={surgeryDate}
                   onChangeText={setSurgeryDate}

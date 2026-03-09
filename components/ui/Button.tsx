@@ -37,7 +37,7 @@ export function Button({ title, subtitle, variant = 'primary', isLoading, classN
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? '#1B3A5C' : 'white'} />
+                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' || variant === 'light' ? '#1B3A5C' : 'white'} />
             ) : (
                 <View className="items-center gap-1">
                     <View className="flex-row items-center gap-2">
