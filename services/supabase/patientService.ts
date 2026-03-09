@@ -125,7 +125,12 @@ export class SupabasePatientService implements IPatientService {
             patient_phone: data.phone || null
         });
 
-        if (authError) throw authError;
+        if (authError) {
+            if (authError.code === '23505' || authError.message?.includes('duplicate key')) {
+                throw new Error('Já existe um paciente cadastrado com este CPF.');
+            }
+            throw authError;
+        }
         if (!newPatientId) throw new Error('Não foi possível criar o usuário do paciente');
 
         // 3. Create the surgery

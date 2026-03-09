@@ -97,21 +97,35 @@ export default function AddPatientScreen() {
       Alert.alert('Erro', 'Idade é obrigatória.');
       return;
     }
-    if (!surgeryDate.trim() || surgeryDate.replace(/\D/g, '').length !== 8) {
+    // Parse date from DD/MM/YYYY to YYYY-MM-DD
+    const dateDigits: string = surgeryDate.replace(/\D/g, '');
+    if (!surgeryDate.trim() || dateDigits.length !== 8) {
       Alert.alert('Erro', 'Data do procedimento inválida (DD/MM/AAAA).');
       return;
     }
+
+    const day: number = parseInt(dateDigits.slice(0, 2), 10);
+    const month: number = parseInt(dateDigits.slice(2, 4), 10);
+    const year: number = parseInt(dateDigits.slice(4, 8), 10);
+
+    // Validate date ranges and real calendar date
+    const parsedDate: Date = new Date(year, month - 1, day);
+    const isValidDate: boolean =
+      parsedDate.getFullYear() === year &&
+      parsedDate.getMonth() === month - 1 &&
+      parsedDate.getDate() === day;
+
+    if (!isValidDate) {
+      Alert.alert('Erro', 'Data inválida. Verifique o dia, mês e ano informados.');
+      return;
+    }
+
     if (!profile?.id) {
       Alert.alert('Erro', 'Sessão expirada.');
       return;
     }
 
-    // Parse date from DD/MM/YYYY to YYYY-MM-DD
-    const dateDigits: string = surgeryDate.replace(/\D/g, '');
-    const day: string = dateDigits.slice(0, 2);
-    const month: string = dateDigits.slice(2, 4);
-    const year: string = dateDigits.slice(4, 8);
-    const isoDate = `${year}-${month}-${day}`;
+    const isoDate = `${String(year)}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     setLoading(true);
     try {
@@ -171,7 +185,8 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">CPF *</Text>
             <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-800 text-base"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="000.000.000-00"
               value={cpf}
               onChangeText={(v) => setCpf(formatCPF(v))}
@@ -184,7 +199,8 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Nome completo *</Text>
             <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-800 text-base"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="Nome do paciente"
               value={name}
               onChangeText={setName}
@@ -226,7 +242,8 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Idade *</Text>
             <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-800 text-base"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="Ex: 45"
               value={age}
               onChangeText={setAge}
@@ -239,7 +256,8 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Telefone</Text>
             <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-800 text-base"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="(00) 00000-0000"
               value={phone}
               onChangeText={(v) => setPhone(formatPhone(v))}
@@ -280,7 +298,8 @@ export default function AddPatientScreen() {
           <View className="mb-8">
             <Text className="text-gray-700 font-medium mb-2">Data do Procedimento *</Text>
             <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-800 text-base"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="DD/MM/AAAA"
               value={surgeryDate}
               onChangeText={(v) => setSurgeryDate(formatDate(v))}
