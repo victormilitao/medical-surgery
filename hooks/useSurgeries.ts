@@ -46,6 +46,7 @@ export const useCreateSurgery = (
       surgeryTypeId: string;
       surgeryDate: string;
       notes?: string;
+      followUpDays?: number;
     }
   >
 ) => {
@@ -58,6 +59,7 @@ export const useCreateSurgery = (
       surgeryTypeId: string;
       surgeryDate: string;
       notes?: string;
+      followUpDays?: number;
     }
   >({
     mutationFn: (data) => surgeryService.createSurgery(data),

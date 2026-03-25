@@ -4,9 +4,10 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import { reportService, surgeryService } from '../../../services';
 import { SurgeryWithDetails } from '../../../services/types';
 
@@ -22,6 +23,7 @@ export default function DoctorPatientTimelineScreen() {
   const router = useRouter();
   const { surgeryId } = useLocalSearchParams();
   const { session, isDoctor } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function DoctorPatientTimelineScreen() {
       const surgeryData = await surgeryService.getSurgeryById(surgeryId as string);
 
       if (!surgeryData) {
-        Alert.alert('Erro', 'Cirurgia não encontrada.');
+        showToast({ type: 'error', title: 'Erro', message: 'Cirurgia não encontrada.' });
         router.back();
         return;
       }
@@ -55,7 +57,7 @@ export default function DoctorPatientTimelineScreen() {
       const [sYear, sMonth, sDay] = surgeryData.surgery_date.split('-').map(Number);
       const sDate = new Date(sYear, sMonth - 1, sDay);
 
-      const recoveryDays = surgeryData.surgery_type.expected_recovery_days || 14;
+      const recoveryDays = (surgeryData as any).follow_up_days ?? surgeryData.surgery_type.expected_recovery_days ?? 14;
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -109,7 +111,7 @@ export default function DoctorPatientTimelineScreen() {
 
     } catch (error) {
       console.error('Error loading timeline:', error);
-      Alert.alert('Erro', 'Não foi possível carregar a linha do tempo do paciente.');
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível carregar a linha do tempo do paciente.' });
     } finally {
       setLoading(false);
     }

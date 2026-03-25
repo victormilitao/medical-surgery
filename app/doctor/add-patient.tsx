@@ -5,7 +5,6 @@ import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,18 +16,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { patientService } from '../../services';
+import { useToast } from '../../context/ToastContext';
+import { patientService, surgeryTypeService } from '../../services';
 
 interface SurgeryType {
   id: string;
   name: string;
+  expected_recovery_days: number | null;
 }
 
 export default function AddPatientScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [cpf, setCpf] = useState('');
@@ -38,6 +39,7 @@ export default function AddPatientScreen() {
   const [phone, setPhone] = useState('');
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
   const [surgeryDate, setSurgeryDate] = useState('');
+  const [followUpDays, setFollowUpDays] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -48,16 +50,29 @@ export default function AddPatientScreen() {
 
   const loadSurgeryTypes = async () => {
     try {
-      const { data, error } = await supabase.from('surgery_types').select('id, name');
-      if (error) throw error;
-      setSurgeryTypes(data || []);
-      if (data && data.length > 0) {
-        setSurgeryTypeId(data[0].id);
+      const data = await surgeryTypeService.getActiveSurgeryTypes();
+      const mapped: SurgeryType[] = (data || []).map((t) => ({
+        id: t.id,
+        name: t.name,
+        expected_recovery_days: t.expected_recovery_days,
+      }));
+      setSurgeryTypes(mapped);
+      if (mapped.length > 0) {
+        setSurgeryTypeId(mapped[0].id);
+        setFollowUpDays(String(mapped[0].expected_recovery_days ?? 14));
       }
     } catch (e) {
       console.error('Error loading surgery types:', e);
     } finally {
       setLoadingTypes(false);
+    }
+  };
+
+  const handleSurgeryTypeChange = (typeId: string) => {
+    setSurgeryTypeId(typeId);
+    const selectedType = surgeryTypes.find((t) => t.id === typeId);
+    if (selectedType) {
+      setFollowUpDays(String(selectedType.expected_recovery_days ?? 14));
     }
   };
 
@@ -86,21 +101,28 @@ export default function AddPatientScreen() {
   const handleSubmit = async () => {
     const cleanCpf: string = cpf.replace(/\D/g, '');
     if (!cleanCpf || cleanCpf.length !== 11) {
-      Alert.alert('Erro', 'CPF inválido. Deve ter 11 dígitos.');
+      showToast({ type: 'error', title: 'Erro', message: 'CPF inválido. Deve ter 11 dígitos.' });
       return;
     }
     if (!name.trim()) {
-      Alert.alert('Erro', 'Nome é obrigatório.');
+      showToast({ type: 'error', title: 'Erro', message: 'Nome é obrigatório.' });
       return;
     }
     if (!age.trim()) {
-      Alert.alert('Erro', 'Idade é obrigatória.');
+      showToast({ type: 'error', title: 'Erro', message: 'Idade é obrigatória.' });
       return;
     }
+
+    const parsedFollowUpDays = parseInt(followUpDays, 10);
+    if (!followUpDays.trim() || isNaN(parsedFollowUpDays) || parsedFollowUpDays < 1) {
+      showToast({ type: 'error', title: 'Erro', message: 'Tempo de acompanhamento deve ser pelo menos 1 dia.' });
+      return;
+    }
+
     // Parse date from DD/MM/YYYY to YYYY-MM-DD
     const dateDigits: string = surgeryDate.replace(/\D/g, '');
     if (!surgeryDate.trim() || dateDigits.length !== 8) {
-      Alert.alert('Erro', 'Data do procedimento inválida (DD/MM/AAAA).');
+      showToast({ type: 'error', title: 'Erro', message: 'Data do procedimento inválida (DD/MM/AAAA).' });
       return;
     }
 
@@ -116,12 +138,12 @@ export default function AddPatientScreen() {
       parsedDate.getDate() === day;
 
     if (!isValidDate) {
-      Alert.alert('Erro', 'Data inválida. Verifique o dia, mês e ano informados.');
+      showToast({ type: 'error', title: 'Erro', message: 'Data inválida. Verifique o dia, mês e ano informados.' });
       return;
     }
 
     if (!profile?.id) {
-      Alert.alert('Erro', 'Sessão expirada.');
+      showToast({ type: 'error', title: 'Erro', message: 'Sessão expirada.' });
       return;
     }
 
@@ -138,18 +160,18 @@ export default function AddPatientScreen() {
         surgeryTypeId,
         surgeryDate: isoDate,
         doctorId: profile.id,
+        followUpDays: parsedFollowUpDays,
       });
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
       queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
 
-      Alert.alert('Sucesso', 'Paciente cadastrado com sucesso!', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showToast({ type: 'success', title: 'Sucesso', message: 'Paciente cadastrado com sucesso!' });
+      setTimeout(() => router.back(), 1500);
     } catch (error: any) {
       console.error('Error creating patient:', error);
-      Alert.alert('Erro', error?.message || 'Falha ao cadastrar paciente.');
+      showToast({ type: 'error', title: 'Erro', message: error?.message || 'Falha ao cadastrar paciente.' });
     } finally {
       setLoading(false);
     }
@@ -181,6 +203,18 @@ export default function AddPatientScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Name */}
+          <View className="mb-4">
+            <Text className="text-gray-700 font-medium mb-2">Nome completo *</Text>
+            <TextInput
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="Nome do paciente"
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
           {/* CPF */}
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">CPF *</Text>
@@ -192,18 +226,6 @@ export default function AddPatientScreen() {
               onChangeText={(v) => setCpf(formatCPF(v))}
               keyboardType="numeric"
               maxLength={14}
-            />
-          </View>
-
-          {/* Name */}
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Nome completo *</Text>
-            <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
-              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
-              placeholder="Nome do paciente"
-              value={name}
-              onChangeText={setName}
             />
           </View>
 
@@ -280,7 +302,7 @@ export default function AddPatientScreen() {
                       ? 'bg-primary-700 border-primary-700'
                       : 'bg-white border-gray-300'
                       }`}
-                    onPress={() => setSurgeryTypeId(type.id)}
+                    onPress={() => handleSurgeryTypeChange(type.id)}
                   >
                     <Text
                       className={`font-medium ${surgeryTypeId === type.id ? 'text-white' : 'text-gray-600'
@@ -292,6 +314,23 @@ export default function AddPatientScreen() {
                 ))}
               </View>
             )}
+          </View>
+
+          {/* Follow-up Days */}
+          <View className="mb-4">
+            <Text className="text-gray-700 font-medium mb-2">Tempo de acompanhamento (dias) *</Text>
+            <TextInput
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="Ex: 14"
+              value={followUpDays}
+              onChangeText={(v) => setFollowUpDays(v.replace(/\D/g, ''))}
+              keyboardType="numeric"
+              maxLength={3}
+            />
+            <Text className="text-gray-400 text-xs mt-1">
+              Preenchido automaticamente pelo procedimento. Altere se necessário.
+            </Text>
           </View>
 
           {/* Surgery Date */}

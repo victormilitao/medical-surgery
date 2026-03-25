@@ -12,8 +12,9 @@ export class SupabaseDoctorService implements IDoctorService {
         password: string;
     }): Promise<{ doctorId: string }> {
         // 1. Sign up the user
+        const cleanEmail = data.email.trim().toLowerCase();
         const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: data.email,
+            email: cleanEmail,
             password: data.password,
         });
 
@@ -30,7 +31,7 @@ export class SupabaseDoctorService implements IDoctorService {
 
         // 2. Sign in to get an active session (needed for RLS)
         const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: data.email,
+            email: cleanEmail,
             password: data.password,
         });
 

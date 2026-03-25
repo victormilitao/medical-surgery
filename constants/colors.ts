@@ -31,4 +31,24 @@ export const AppColors = {
     800: '#1F2937',
     900: '#111827',
   },
+  success: {
+    light: '#ECFDF5',
+    DEFAULT: '#10B981',
+    dark: '#065F46',
+  },
+  error: {
+    light: '#FEF2F2',
+    DEFAULT: '#EF4444',
+    dark: '#991B1B',
+  },
+  warning: {
+    light: '#FFFBEB',
+    DEFAULT: '#F59E0B',
+    dark: '#92400E',
+  },
+  info: {
+    light: '#EFF6FF',
+    DEFAULT: '#3B82F6',
+    dark: '#1E40AF',
+  },
 } as const;

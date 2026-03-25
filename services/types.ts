@@ -47,6 +47,7 @@ export interface IPatientService {
         surgeryTypeId: string;
         surgeryDate: string;
         doctorId: string;
+        followUpDays?: number;
     }): Promise<{ patientId: string; surgeryId: string }>;
 }
 
@@ -59,6 +60,7 @@ export interface ISurgeryService {
         surgeryTypeId: string;
         surgeryDate: string;
         notes?: string;
+        followUpDays?: number;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
 }

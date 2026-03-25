@@ -3,8 +3,9 @@ import { Stack, useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { patientService, questionService, reportService } from '../../services';
 import { QuestionWithDetails } from '../../services/types';
 
@@ -14,6 +15,7 @@ export default function DailyReportScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { session } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -60,20 +62,19 @@ export default function DailyReportScreen() {
         });
 
         if (hasReportToday) {
-          Alert.alert('Aviso', 'Você já respondeu o questionário de hoje.', [
-            { text: 'OK', onPress: () => router.back() }
-          ]);
+          showToast({ type: 'info', title: 'Aviso', message: 'Você já respondeu o questionário de hoje.' });
+          setTimeout(() => router.back(), 1500);
           return;
         }
 
         setQuestions(fetchedQuestions);
       } else {
-        Alert.alert('Erro', 'Cirurgia não encontrada.');
+        showToast({ type: 'error', title: 'Erro', message: 'Cirurgia não encontrada.' });
         router.back();
       }
     } catch (error) {
       console.error('Error loading questions:', error);
-      Alert.alert('Erro', 'Falha ao carregar as perguntas.');
+      showToast({ type: 'error', title: 'Erro', message: 'Falha ao carregar as perguntas.' });
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,7 @@ export default function DailyReportScreen() {
 
   const handleSubmit = async () => {
     if (!session?.user.id || !currentSurgeryId) {
-      Alert.alert('Erro', 'Informações da cirurgia não encontradas.');
+      showToast({ type: 'error', title: 'Erro', message: 'Informações da cirurgia não encontradas.' });
       return;
     }
 
@@ -142,18 +143,18 @@ export default function DailyReportScreen() {
     });
 
     if (missingAnswers.length > 0) {
-      Alert.alert('Atenção', 'Por favor, responda todas as perguntas obrigatórias.');
+      showToast({ type: 'warning', title: 'Atenção', message: 'Por favor, responda todas as perguntas obrigatórias.' });
       return;
     }
 
     try {
       setSubmitting(true);
       await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
-      Alert.alert('Sucesso', 'Relatório enviado com sucesso!');
+      showToast({ type: 'success', title: 'Sucesso', message: 'Relatório enviado com sucesso!' });
       router.back();
     } catch (error) {
       console.error('Error submitting report:', error);
-      Alert.alert('Erro', 'Falha ao enviar o relatório. Tente novamente.');
+      showToast({ type: 'error', title: 'Erro', message: 'Falha ao enviar o relatório. Tente novamente.' });
     } finally {
       setSubmitting(false);
     }

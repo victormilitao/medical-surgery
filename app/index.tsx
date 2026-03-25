@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Stack, useRouter } from 'expo-router';
 import { FileText, Lock, Stethoscope, User } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui/Button';
 import { AppColors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +14,7 @@ import { supabase } from '../lib/supabase';
 export default function LoginScreen() {
   const router = useRouter();
   const { session, profile, isLoading: isAuthLoading } = useAuth();
+  const { showToast } = useToast();
   const [role, setRole] = useState<'none' | 'patient' | 'doctor'>('none');
 
   // Form states
@@ -29,11 +31,13 @@ export default function LoginScreen() {
   const [docPhoneBusiness, setDocPhoneBusiness] = useState('');
   const [docPhonePersonal, setDocPhonePersonal] = useState('');
   const [docPassword, setDocPassword] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
+  const isRegisteringRef = useRef(false);
 
   // Auto-redirect if logged in
   useEffect(() => {
+    if (isRegisteringRef.current) return;
     if (!isAuthLoading && session && profile) {
       if (profile.role === 'doctor') {
         router.replace('/doctor/dashboard' as Href);
@@ -50,10 +54,39 @@ export default function LoginScreen() {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
+  const formatCPF = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const formatCRM = (value: string): string => {
+    // Remove everything except digits, letters, and slash
+    const clean = value.replace(/[^0-9a-zA-Z/]/g, '');
+    // Extract digits part (first 6 digits)
+    const digits = clean.replace(/[^0-9]/g, '').slice(0, 6);
+    // Extract letters part (after the slash or after 6 digits)
+    const slashIndex = clean.indexOf('/');
+    let letters = '';
+    if (slashIndex !== -1) {
+      letters = clean.slice(slashIndex + 1).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+    } else if (digits.length === 6) {
+      // If user typed 6 digits and then letters without slash
+      letters = clean.slice(6).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+    }
+    if (digits.length < 6) return digits;
+    if (letters.length > 0) return `${digits}/${letters}`;
+    // Auto-add slash after 6 digits if user is still typing
+    if (digits.length === 6 && clean.includes('/')) return `${digits}/`;
+    return digits;
+  };
+
   const handlePatientLogin = async () => {
     const cleanPhone: string = patientPhone.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
-      Alert.alert('Atenção', 'Número de telefone inválido.');
+      showToast({ type: 'warning', title: 'Atenção', message: 'Número de telefone inválido.' });
       return;
     }
     setIsLoading(true);
@@ -66,7 +99,7 @@ export default function LoginScreen() {
         .single();
 
       if (profileError || !profileData?.email) {
-        Alert.alert('Não encontrado', 'Não encontramos um cadastro com esse número de telefone. Verifique se o número foi digitado corretamente.');
+        showToast({ type: 'error', title: 'Não encontrado', message: 'Não encontramos um cadastro com esse número de telefone.' });
         setIsLoading(false);
         return;
       }
@@ -78,10 +111,10 @@ export default function LoginScreen() {
       });
 
       if (devLoginError) {
-        Alert.alert('Erro', devLoginError.message);
+        showToast({ type: 'error', title: 'Erro', message: devLoginError.message });
       }
     } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro inesperado.');
+      showToast({ type: 'error', title: 'Erro', message: 'Ocorreu um erro inesperado.' });
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -102,7 +135,7 @@ export default function LoginScreen() {
         .single();
 
       if (profileError || !profiles?.email) {
-        Alert.alert('Erro', 'CPF não encontrado ou incorreto.');
+        showToast({ type: 'error', title: 'Erro', message: 'CPF não encontrado ou incorreto.' });
         setIsLoading(false);
         return;
       }
@@ -114,11 +147,11 @@ export default function LoginScreen() {
       });
 
       if (authError) {
-        Alert.alert('Erro', 'Senha incorreta.');
+        showToast({ type: 'error', title: 'Erro', message: 'Senha incorreta.' });
       }
       // Auto-redirect handles the rest
     } catch (error) {
-      Alert.alert('Erro', 'Erro ao tentar fazer login.');
+      showToast({ type: 'error', title: 'Erro', message: 'Erro ao tentar fazer login.' });
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -127,10 +160,16 @@ export default function LoginScreen() {
 
   const handleDoctorRegistration = async () => {
     if (!docName || !docCpf || !docCrm || !docEmail || !docPhoneBusiness || !docPassword) {
-       Alert.alert('Atenção', 'Preencha todos os campos obrigatórios.');
-       return;
+      showToast({ type: 'warning', title: 'Atenção', message: 'Preencha todos os campos obrigatórios.' });
+      return;
+    }
+    const crmRegex = /^\d{6}\/[A-Z]{2}$/;
+    if (!crmRegex.test(docCrm)) {
+      showToast({ type: 'warning', title: 'Atenção', message: 'CRM inválido. Use o formato 123456/UF (6 dígitos + sigla do estado).' });
+      return;
     }
     setIsLoading(true);
+    isRegisteringRef.current = true;
     try {
       const { doctorService } = await import('../services');
       await doctorService.registerDoctor({
@@ -139,18 +178,17 @@ export default function LoginScreen() {
         crm: docCrm,
         phone_business: docPhoneBusiness.replace(/\D/g, ''),
         phone_personal: docPhonePersonal ? docPhonePersonal.replace(/\D/g, '') : undefined,
-        email: docEmail,
+        email: docEmail.trim().toLowerCase(),
         password: docPassword
       });
       // Service signs out after registration. Show success and go to doctor login.
-      Alert.alert(
-        'Cadastro realizado!',
-        'Sua conta foi criada com sucesso. Faça login com seu CPF e senha.',
-        [{ text: 'OK', onPress: () => setIsRegisteringDoctor(false) }]
-      );
+      setIsRegisteringDoctor(false);
+      setRole('doctor');
+      showToast({ type: 'success', title: 'Cadastro realizado!', message: 'Faça login com seu CPF e senha.' });
     } catch (error: any) {
-      Alert.alert('Erro no cadastro', error.message || 'Ocorreu um erro ao cadastrar o médico.');
+      showToast({ type: 'error', title: 'Erro no cadastro', message: error.message || 'Ocorreu um erro ao cadastrar o médico.' });
     } finally {
+      isRegisteringRef.current = false;
       setIsLoading(false);
     }
   };
@@ -269,10 +307,10 @@ export default function LoginScreen() {
             <TextInput
               className="flex-1 ml-3"
               style={{ color: AppColors.white, fontSize: 16, paddingVertical: 0, height: '100%', textAlignVertical: 'center' }}
-              placeholder="CPF"
+              placeholder="000.000.000-00"
               placeholderTextColor={AppColors.gray[400]}
               value={cpf}
-              onChangeText={(v) => setCpf(v /* formatCPF not available, but user can type */)}
+              onChangeText={(v) => setCpf(formatCPF(v))}
               keyboardType="numeric"
               maxLength={14}
             />
@@ -343,16 +381,16 @@ export default function LoginScreen() {
               onChangeText={setDocName}
             />
           </View>
-          
+
           <View style={[styles.inputContainer, { marginBottom: 12 }]}>
             <FileText size={20} color={AppColors.gray[400]} />
             <TextInput
               className="flex-1 ml-3"
               style={{ color: AppColors.white, fontSize: 16, paddingVertical: 0, height: '100%', textAlignVertical: 'center' }}
-              placeholder="CPF *"
+              placeholder="000.000.000-00 *"
               placeholderTextColor={AppColors.gray[400]}
               value={docCpf}
-              onChangeText={setDocCpf}
+              onChangeText={(v) => setDocCpf(formatCPF(v))}
               keyboardType="number-pad"
               maxLength={14}
             />
@@ -363,11 +401,12 @@ export default function LoginScreen() {
             <TextInput
               className="flex-1 ml-3"
               style={{ color: AppColors.white, fontSize: 16, paddingVertical: 0, height: '100%', textAlignVertical: 'center' }}
-              placeholder="CRM *"
+              placeholder="123456/UF *"
               placeholderTextColor={AppColors.gray[400]}
               value={docCrm}
-              onChangeText={setDocCrm}
-              keyboardType="number-pad"
+              onChangeText={(v) => setDocCrm(formatCRM(v))}
+              autoCapitalize="characters"
+              maxLength={9}
             />
           </View>
 

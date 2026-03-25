@@ -5,9 +5,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import { patientService, questionService, reportService } from '../../../services';
 import { DailyReport, QuestionWithDetails } from '../../../services/types';
 
@@ -16,6 +17,7 @@ export default function ReportHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<DailyReport | null>(null);
   const [questions, setQuestions] = useState<QuestionWithDetails[]>([]);
@@ -32,7 +34,7 @@ export default function ReportHistoryScreen() {
       const reportData = await reportService.getReportById(reportId as string);
 
       if (!reportData) {
-        Alert.alert('Erro', 'Relatório não encontrado.');
+        showToast({ type: 'error', title: 'Erro', message: 'Relatório não encontrado.' });
         router.back();
         return;
       }
@@ -48,7 +50,7 @@ export default function ReportHistoryScreen() {
       }
     } catch (error) {
       console.error('Error loading history:', error);
-      Alert.alert('Erro', 'Falha ao carregar o histórico.');
+      showToast({ type: 'error', title: 'Erro', message: 'Falha ao carregar o histórico.' });
     } finally {
       setLoading(false);
     }

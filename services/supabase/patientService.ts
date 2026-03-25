@@ -69,7 +69,7 @@ export class SupabasePatientService implements IPatientService {
 
         let currentSurgery: (Surgery & { surgery_type: Pick<SurgeryType, 'id' | 'name' | 'description' | 'expected_recovery_days'> }) | null = null;
         let daysSinceSurgery = 0;
-        const totalRecoveryDays = 14;
+        let totalRecoveryDays = 14;
 
         if (patient?.surgery_id) {
             const { data: surgery } = await supabase
@@ -83,6 +83,7 @@ export class SupabasePatientService implements IPatientService {
 
             if (surgery) {
                 currentSurgery = surgery as any;
+                totalRecoveryDays = (surgery as any).follow_up_days ?? surgery.surgery_type.expected_recovery_days ?? 14;
                 // Create local date from YYYY-MM-DD to avoid UTC shift
                 const dateParts = surgery.surgery_date.split('T')[0].split('-');
                 const surgeryDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
@@ -110,6 +111,7 @@ export class SupabasePatientService implements IPatientService {
         surgeryTypeId: string;
         surgeryDate: string;
         doctorId: string;
+        followUpDays?: number;
     }): Promise<{ patientId: string; surgeryId: string }> {
         // Generate fake email for Supabase Auth (patient logs in via CPF, not email)
         const fakeEmail = `${data.cpf}@paciente.app`;
@@ -142,7 +144,8 @@ export class SupabasePatientService implements IPatientService {
                 surgery_type_id: data.surgeryTypeId,
                 surgery_date: data.surgeryDate,
                 status: 'active',
-                medical_status: 'stable'
+                medical_status: 'stable',
+                follow_up_days: data.followUpDays ?? null
             })
             .select()
             .single();

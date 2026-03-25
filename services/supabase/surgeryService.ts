@@ -71,6 +71,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
     surgeryTypeId: string;
     surgeryDate: string;
     notes?: string;
+    followUpDays?: number;
   }): Promise<Surgery> {
     const { data: surgery, error } = await supabase
       .from('surgeries')
@@ -81,7 +82,8 @@ export class SupabaseSurgeryService implements ISurgeryService {
         surgery_date: data.surgeryDate,
         notes: data.notes,
         status: 'active',
-        medical_status: 'stable' as const
+        medical_status: 'stable' as const,
+        follow_up_days: data.followUpDays ?? null
       })
       .select()
       .single();
@@ -101,20 +103,45 @@ export class SupabaseSurgeryService implements ISurgeryService {
   }
 
   async finalizeSurgeriesPastRecovery(doctorId: string): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - 15);
-    // Use local date to avoid UTC shift (toISOString would shift +1 day at night in UTC-3)
-    const year = cutoffDate.getFullYear();
-    const month = String(cutoffDate.getMonth() + 1).padStart(2, '0');
-    const day = String(cutoffDate.getDate()).padStart(2, '0');
-    const cutoffISO = `${year}-${month}-${day}`;
+    // Fetch active surgeries with their follow_up_days and surgery type's expected_recovery_days
+    const { data: activeSurgeries, error: fetchError } = await supabase
+      .from('surgeries')
+      .select(`
+        id,
+        surgery_date,
+        follow_up_days,
+        surgery_type:surgery_types(expected_recovery_days)
+      `)
+      .eq('doctor_id', doctorId)
+      .eq('status', 'active');
+
+    if (fetchError) {
+      console.error('Error fetching active surgeries:', fetchError);
+      throw fetchError;
+    }
+
+    if (!activeSurgeries || activeSurgeries.length === 0) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filter surgeries that have passed their follow-up period
+    const surgeriesToFinalize = activeSurgeries.filter(s => {
+      const recoveryDays = s.follow_up_days ?? (s.surgery_type as any)?.expected_recovery_days ?? 14;
+      const dateParts = s.surgery_date.split('T')[0].split('-');
+      const surgeryDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+      surgeryDate.setDate(surgeryDate.getDate() + recoveryDays + 1); // +1 because day after last recovery day
+      return surgeryDate.getTime() <= today.getTime();
+    });
+
+    if (surgeriesToFinalize.length === 0) return 0;
+
+    const idsToFinalize = surgeriesToFinalize.map(s => s.id);
 
     const { data, error } = await supabase
       .from('surgeries')
       .update({ status: 'completed' })
-      .eq('doctor_id', doctorId)
-      .eq('status', 'active')
-      .lte('surgery_date', cutoffISO)
+      .in('id', idsToFinalize)
       .select('id');
 
     if (error) {

@@ -4,9 +4,10 @@ import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { patientService, reportService } from '../../services';
 
 interface TimelineDay {
@@ -20,6 +21,7 @@ interface TimelineDay {
 export default function TimelineScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
@@ -46,7 +48,7 @@ export default function TimelineScreen() {
         const sDate = new Date(sYear, sMonth - 1, sDay);
 
         setSurgeryDate(sDate);
-        const recoveryDays = dashboardData.currentSurgery.surgery_type.expected_recovery_days || 14;
+        const recoveryDays = (dashboardData.currentSurgery as any).follow_up_days ?? dashboardData.currentSurgery.surgery_type.expected_recovery_days ?? 14;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -116,7 +118,7 @@ export default function TimelineScreen() {
       }
     } catch (error) {
       console.error('Error loading timeline:', error);
-      Alert.alert('Erro', 'Não foi possível carregar a linha do tempo.');
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível carregar a linha do tempo.' });
     } finally {
       setLoading(false);
     }

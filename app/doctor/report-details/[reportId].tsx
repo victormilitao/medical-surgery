@@ -4,9 +4,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import { questionService, reportService, surgeryService } from '../../../services';
 import { DailyReport, QuestionWithDetails } from '../../../services/types';
 
@@ -55,6 +56,7 @@ export default function DoctorReportDetailsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { session, isDoctor } = useAuth();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<DailyReport | null>(null);
@@ -73,7 +75,7 @@ export default function DoctorReportDetailsScreen() {
       const reportData = await reportService.getReportById(reportId as string);
 
       if (!reportData) {
-        Alert.alert('Erro', 'Relatório não encontrado.');
+        showToast({ type: 'error', title: 'Erro', message: 'Relatório não encontrado.' });
         router.back();
         return;
       }
@@ -89,7 +91,7 @@ export default function DoctorReportDetailsScreen() {
       }
     } catch (error) {
       console.error('Error loading report details:', error);
-      Alert.alert('Erro', 'Falha ao carregar os detalhes do relatório.');
+      showToast({ type: 'error', title: 'Erro', message: 'Falha ao carregar os detalhes do relatório.' });
     } finally {
       setLoading(false);
     }

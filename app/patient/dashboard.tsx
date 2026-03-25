@@ -1,7 +1,7 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Calendar, FileText, Info, LogOut } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
 import { PhaseGuidelinesSheet } from '../../components/patient/PhaseGuidelinesSheet';
@@ -9,6 +9,7 @@ import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { usePatientDashboard } from '../../hooks/usePatientDashboard';
 import { reportService } from '../../services';
 
@@ -16,6 +17,7 @@ export default function PatientDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
     const [isGuidelinesVisible, setIsGuidelinesVisible] = useState(false);
+    const { showToast } = useToast();
     const insets = useSafeAreaInsets();
 
     // Fetch patient dashboard data
@@ -37,7 +39,7 @@ export default function PatientDashboard() {
         // Ensure patient waits until the next day
         const currentDayOfSurgery = Math.max(0, dashboardData?.daysSinceSurgery || 0);
         if (currentDayOfSurgery < 1) {
-            Alert.alert('Aguarde', 'O questionário estará disponível a partir do dia seguinte ao cadastro da cirurgia.');
+            showToast({ type: 'info', title: 'Aguarde', message: 'O questionário estará disponível a partir do dia seguinte ao cadastro da cirurgia.' });
             return;
         }
 
@@ -55,7 +57,7 @@ export default function PatientDashboard() {
             });
 
             if (hasReportToday) {
-                Alert.alert('Aviso', 'Você já respondeu o questionário de hoje.');
+                showToast({ type: 'info', title: 'Aviso', message: 'Você já respondeu o questionário de hoje.' });
                 return;
             }
 
@@ -78,7 +80,7 @@ export default function PatientDashboard() {
         })()
         : 'N/A';
     const currentDay = Math.max(0, dashboardData?.daysSinceSurgery || 0);
-    const totalDays = (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days || dashboardData?.totalRecoveryDays || 14;
+    const totalDays = (dashboardData?.currentSurgery as any)?.follow_up_days ?? (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days ?? dashboardData?.totalRecoveryDays ?? 14;
 
     return (
         <View className="flex-1 bg-gray-50">

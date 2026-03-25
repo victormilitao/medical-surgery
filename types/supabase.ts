@@ -252,6 +252,7 @@ export type Database = {
         Row: {
           created_at: string
           doctor_id: string
+          follow_up_days: number | null
           id: string
           notes: string | null
           patient_id: string
@@ -264,6 +265,7 @@ export type Database = {
         Insert: {
           created_at?: string
           doctor_id: string
+          follow_up_days?: number | null
           id?: string
           medical_status: 'stable' | 'warning' | 'critical' | null
           notes?: string | null
@@ -276,6 +278,7 @@ export type Database = {
         Update: {
           created_at?: string
           doctor_id?: string
+          follow_up_days?: number | null
           id?: string
           medical_status?: 'stable' | 'warning' | 'critical' | null
           notes?: string | null
