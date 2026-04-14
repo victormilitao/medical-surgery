@@ -205,7 +205,7 @@ export default function LoginScreen() {
             <Stethoscope size={64} color="#FFFFFF" strokeWidth={1.5} />
           </View>
           <Text style={styles.titleText}>
-            Pós-Operatório Digital
+            PosOp Monitor
           </Text>
         </View>
 
