@@ -214,5 +214,23 @@ describe('SupabasePatientService', () => {
         doctorId: 'd1',
       })).rejects.toThrow('Não foi possível criar o usuário do paciente');
     });
+
+    it('deve lançar erro de telefone duplicado', async () => {
+      mockRpc.mockResolvedValue({
+        data: null,
+        error: { code: '23505', message: 'duplicate key value violates unique constraint "profiles_phone_unique"' },
+      });
+
+      await expect(service.createPatient({
+        name: 'Maria',
+        cpf: '98765432100',
+        sex: 'F',
+        age: '25',
+        phone: '85988103356',
+        surgeryTypeId: 'st1',
+        surgeryDate: '2026-03-20',
+        doctorId: 'd1',
+      })).rejects.toThrow('Já existe um paciente cadastrado com este número de telefone.');
+    });
   });
 });

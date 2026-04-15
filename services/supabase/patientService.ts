@@ -129,6 +129,9 @@ export class SupabasePatientService implements IPatientService {
 
         if (authError) {
             if (authError.code === '23505' || authError.message?.includes('duplicate key')) {
+                if (authError.message?.includes('profiles_phone_unique')) {
+                    throw new Error('Já existe um paciente cadastrado com este número de telefone.');
+                }
                 throw new Error('Já existe um paciente cadastrado com este CPF.');
             }
             throw authError;

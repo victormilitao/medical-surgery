@@ -113,6 +113,12 @@ export default function AddPatientScreen() {
       return;
     }
 
+    const cleanPhone: string = phone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      showToast({ type: 'error', title: 'Erro', message: 'Telefone é obrigatório e deve ter DDD + número.' });
+      return;
+    }
+
     const parsedFollowUpDays = parseInt(followUpDays, 10);
     if (!followUpDays.trim() || isNaN(parsedFollowUpDays) || parsedFollowUpDays < 1) {
       showToast({ type: 'error', title: 'Erro', message: 'Tempo de acompanhamento deve ser pelo menos 1 dia.' });
@@ -276,7 +282,7 @@ export default function AddPatientScreen() {
 
           {/* Phone */}
           <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Telefone</Text>
+            <Text className="text-gray-700 font-medium mb-2">Telefone *</Text>
             <TextInput
               className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
               style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
