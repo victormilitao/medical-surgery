@@ -140,7 +140,7 @@ export class SupabaseSurgeryService implements ISurgeryService {
 
     const { data, error } = await supabase
       .from('surgeries')
-      .update({ status: 'completed' })
+      .update({ status: 'pending_return' })
       .in('id', idsToFinalize)
       .select('id');
 
@@ -150,6 +150,19 @@ export class SupabaseSurgeryService implements ISurgeryService {
     }
 
     return data?.length || 0;
+  }
+
+  async dismissPendingReturn(surgeryId: string): Promise<void> {
+    const { error } = await supabase
+      .from('surgeries')
+      .update({ status: 'completed' })
+      .eq('id', surgeryId)
+      .eq('status', 'pending_return');
+
+    if (error) {
+      console.error('Error dismissing pending return:', error);
+      throw error;
+    }
   }
 }
 

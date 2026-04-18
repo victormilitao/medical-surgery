@@ -82,3 +82,15 @@ export const useAutoFinalizeSurgeries = (doctorId: string | undefined) => {
     });
   }, [doctorId, queryClient]);
 };
+
+export const useDismissPendingReturn = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (surgeryId: string) => surgeryService.dismissPendingReturn(surgeryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surgeries'] });
+      queryClient.invalidateQueries({ queryKey: ['surgery'] });
+    },
+  });
+};

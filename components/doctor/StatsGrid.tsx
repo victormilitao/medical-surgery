@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity, View } from 'react-native';
 
-export type StatStatus = 'critical' | 'warning' | 'stable' | 'finished';
+export type StatStatus = 'critical' | 'warning' | 'stable' | 'finished' | 'pending_return';
 
 interface StatCardProps {
     label: string;
@@ -8,9 +8,10 @@ interface StatCardProps {
     color: 'red' | 'yellow' | 'green' | 'gray';
     isSelected: boolean;
     onPress: () => void;
+    pendingCount?: number;
 }
 
-function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
+function StatCard({ label, count, color, isSelected, onPress, pendingCount }: StatCardProps) {
     let borderColor = 'border-gray-300';
     let textColor = 'text-gray-900';
     let countColor = 'text-gray-900';
@@ -40,6 +41,9 @@ function StatCard({ label, count, color, isSelected, onPress }: StatCardProps) {
             >
                 <Text className={`text-2xl font-bold ${countColor}`}>{count}</Text>
                 <Text className={`text-xs font-medium ${textColor} text-center`} numberOfLines={1}>{label}</Text>
+                {(pendingCount !== undefined && pendingCount > 0) && (
+                    <Text className="text-orange-500 text-xs font-medium mt-0.5">{pendingCount} pend.</Text>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -51,6 +55,7 @@ interface StatsGridProps {
         warning: number;
         stable: number;
         finished: number;
+        pendingReturn: number;
     };
     selectedStatus?: StatStatus;
     onSelectStatus?: (status: StatStatus) => void;
@@ -86,10 +91,11 @@ export function StatsGrid({ counts, selectedStatus, onSelectStatus }: StatsGridP
             />
             <StatCard
                 label="Finalizados"
-                count={counts?.finished || 0}
+                count={(counts?.finished || 0) + (counts?.pendingReturn || 0)}
                 color="gray"
                 isSelected={selectedStatus === 'finished'}
                 onPress={() => handleSelect('finished')}
+                pendingCount={counts?.pendingReturn || 0}
             />
         </View>
     );

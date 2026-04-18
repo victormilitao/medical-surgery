@@ -52,8 +52,10 @@ export default function DoctorDashboard() {
       // otherwise fallback to logic or default to stable if cancelled/completed
       let patientStatus: PatientStatus = 'stable';
 
-      if (surgery.status === 'completed' || daysSinceSurgery >= 15) {
+      if (surgery.status === 'completed') {
         patientStatus = 'finished';
+      } else if (surgery.status === 'pending_return') {
+        patientStatus = 'pending_return';
       } else if (surgery.status === 'cancelled') {
         patientStatus = 'stable';
       } else if (surgery.medical_status) {
@@ -81,7 +83,12 @@ export default function DoctorDashboard() {
 
   // Filter patients based on selection
   const filteredPatients = useMemo(() => {
-    return patients.filter(p => p.status === filterStatus);
+    return patients.filter(p => {
+      if (filterStatus === 'finished') {
+        return p.status === 'finished' || p.status === 'pending_return';
+      }
+      return p.status === filterStatus;
+    });
   }, [patients, filterStatus]);
 
   // Calculate counts for StatsGrid
@@ -90,12 +97,14 @@ export default function DoctorDashboard() {
       critical: 0,
       warning: 0,
       stable: 0,
-      finished: 0
+      finished: 0,
+      pendingReturn: 0
     };
     patients.forEach(p => {
       if (p.status === 'critical') counts.critical++;
       else if (p.status === 'warning') counts.warning++;
       else if (p.status === 'stable') counts.stable++;
+      else if (p.status === 'pending_return') counts.pendingReturn++;
       else if (p.status === 'finished') counts.finished++;
     });
     return counts;

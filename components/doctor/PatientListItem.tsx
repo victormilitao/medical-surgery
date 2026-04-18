@@ -1,9 +1,9 @@
-import { CheckCircle, ChevronRight, User } from 'lucide-react-native';
+import { CheckCircle, ChevronRight, Clock, User } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
 
-export type PatientStatus = 'critical' | 'warning' | 'stable' | 'finished';
+export type PatientStatus = 'critical' | 'warning' | 'stable' | 'finished' | 'pending_return';
 
 interface PatientListItemProps {
     name: string;
@@ -39,6 +39,10 @@ export function PatientListItem({
         statusColor = '#eab308'; // yellow
         statusLabel = 'Atenção';
         badgeVariant = 'warning';
+    } else if (status === 'pending_return') {
+        statusColor = '#f97316'; // orange
+        statusLabel = 'Pendente Retorno';
+        badgeVariant = 'default';
     } else if (status === 'finished') {
         statusColor = '#3b82f6'; // blue
         statusLabel = 'Finalizado';
@@ -77,7 +81,12 @@ export function PatientListItem({
 
                 {status !== 'finished' && (
                     <View className="flex-row justify-between items-center mt-1">
-                        {lastResponseDate ? (
+                        {status === 'pending_return' ? (
+                            <View className="flex-row items-center">
+                                <Clock size={14} color="#f97316" style={{ marginRight: 4 }} />
+                                <Text className="text-orange-600 font-medium text-sm">Pendente Retorno</Text>
+                            </View>
+                        ) : lastResponseDate ? (
                             <View className="flex-row items-center">
                                 <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
                                 <Text className="text-gray-600 text-sm">{statusLabel}</Text>

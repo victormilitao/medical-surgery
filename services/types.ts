@@ -29,7 +29,7 @@ export interface PatientListItem {
     surgeryDate: string;
     surgeryType: string;
     day: number;
-    status: 'active' | 'completed' | 'cancelled';
+    status: 'active' | 'completed' | 'cancelled' | 'pending_return';
     lastResponseDate: string | null;
     alerts?: string[];
 }
@@ -76,6 +76,7 @@ export interface ISurgeryService {
         followUpDays?: number;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
+    dismissPendingReturn(surgeryId: string): Promise<void>;
 }
 
 export type Question = Database['public']['Tables']['questions']['Row'];

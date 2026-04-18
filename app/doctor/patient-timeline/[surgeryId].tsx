@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, CheckCircle, ChevronRight, Pencil } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, ChevronRight, Clock, Pencil } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import { useToast } from '../../../context/ToastContext';
 import { reportService, surgeryService } from '../../../services';
 import { SurgeryWithDetails } from '../../../services/types';
 import { AppColors } from '../../../constants/colors';
+import { PendingReturnModal } from '../../../components/doctor/PendingReturnModal';
+import { useDismissPendingReturn } from '../../../hooks/useSurgeries';
 
 interface TimelineDay {
   day: number;
@@ -30,6 +32,8 @@ export default function DoctorPatientTimelineScreen() {
   const [loading, setLoading] = useState(true);
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [surgery, setSurgery] = useState<SurgeryWithDetails | null>(null);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const dismissPendingReturn = useDismissPendingReturn();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -124,6 +128,18 @@ export default function DoctorPatientTimelineScreen() {
     }
   };
 
+  const handleConfirmReturn = async () => {
+    if (!surgery) return;
+    try {
+      await dismissPendingReturn.mutateAsync(surgery.id);
+      setShowReturnModal(false);
+      showToast({ type: 'success', title: 'Sucesso', message: 'Retorno confirmado com sucesso.' });
+      loadData();
+    } catch {
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível confirmar o retorno.' });
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
@@ -166,6 +182,23 @@ export default function DoctorPatientTimelineScreen() {
             Acompanhando evolução de {surgery?.surgery_type.name || 'cirurgia'}
           </Text>
         </View>
+
+        {surgery?.status === 'pending_return' && (
+          <TouchableOpacity
+            className="flex-row items-center justify-between bg-orange-50 p-4 rounded-xl border border-orange-200 mb-4"
+            onPress={() => setShowReturnModal(true)}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center flex-1">
+              <Clock size={20} color="#f97316" style={{ marginRight: 8 }} />
+              <View className="flex-1">
+                <Text className="text-orange-800 font-semibold text-base">Pendente Retorno</Text>
+                <Text className="text-orange-600 text-sm">Toque para confirmar o retorno do paciente</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color="#f97316" />
+          </TouchableOpacity>
+        )}
 
         {timeline.map((item) => (
           <TouchableOpacity
@@ -240,6 +273,14 @@ export default function DoctorPatientTimelineScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <PendingReturnModal
+        visible={showReturnModal}
+        patientName={surgery?.patient.full_name || ''}
+        onConfirm={handleConfirmReturn}
+        onClose={() => setShowReturnModal(false)}
+        isLoading={dismissPendingReturn.isPending}
+      />
     </View>
   );
 }
