@@ -6,6 +6,7 @@ const mockGetSurgeriesByDoctorId = jest.fn();
 const mockGetSurgeryById = jest.fn();
 const mockCreateSurgery = jest.fn();
 const mockFinalizeSurgeriesPastRecovery = jest.fn();
+const mockDismissPendingReturn = jest.fn();
 
 jest.mock('../../services', () => ({
   surgeryService: {
@@ -13,10 +14,11 @@ jest.mock('../../services', () => ({
     getSurgeryById: (...args: any[]) => mockGetSurgeryById(...args),
     createSurgery: (...args: any[]) => mockCreateSurgery(...args),
     finalizeSurgeriesPastRecovery: (...args: any[]) => mockFinalizeSurgeriesPastRecovery(...args),
+    dismissPendingReturn: (...args: any[]) => mockDismissPendingReturn(...args),
   },
 }));
 
-import { useSurgeriesByDoctor, useSurgery, useCreateSurgery, useAutoFinalizeSurgeries } from '../useSurgeries';
+import { useSurgeriesByDoctor, useSurgery, useCreateSurgery, useAutoFinalizeSurgeries, useDismissPendingReturn } from '../useSurgeries';
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -117,4 +119,37 @@ describe('useSurgeries hooks', () => {
       });
     });
   });
+
+  describe('useDismissPendingReturn', () => {
+    it('deve chamar dismissPendingReturn ao fazer mutate', async () => {
+      mockDismissPendingReturn.mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useDismissPendingReturn(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        result.current.mutate('s1');
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockDismissPendingReturn).toHaveBeenCalledWith('s1');
+    });
+
+    it('deve tratar erro ao falhar', async () => {
+      mockDismissPendingReturn.mockRejectedValue(new Error('fail'));
+
+      const { result } = renderHook(() => useDismissPendingReturn(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        result.current.mutate('s1');
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error?.message).toBe('fail');
+    });
+  });
 });
+

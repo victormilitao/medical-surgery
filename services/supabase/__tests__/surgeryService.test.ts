@@ -199,4 +199,25 @@ describe('SupabaseSurgeryService', () => {
       await expect(service.finalizeSurgeriesPastRecovery('d1')).rejects.toEqual({ message: 'Error' });
     });
   });
+
+  describe('dismissPendingReturn', () => {
+    it('deve atualizar status de pending_return para completed', async () => {
+      const builder = createMockQueryBuilder(null, null);
+      mockFrom.mockReturnValue(builder);
+
+      await service.dismissPendingReturn('s1');
+
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(builder.update).toHaveBeenCalledWith({ status: 'completed' });
+      expect(builder.eq).toHaveBeenCalledWith('id', 's1');
+      expect(builder.eq).toHaveBeenCalledWith('status', 'pending_return');
+    });
+
+    it('deve lançar erro quando update falha', async () => {
+      const builder = createMockQueryBuilder(null, { message: 'Update error' });
+      mockFrom.mockReturnValue(builder);
+
+      await expect(service.dismissPendingReturn('s1')).rejects.toEqual({ message: 'Update error' });
+    });
+  });
 });

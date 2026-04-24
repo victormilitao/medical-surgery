@@ -1,35 +1,61 @@
 import { X } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { usePhaseGuidelines } from '../../hooks/useGuidance';
+import { SurgeryTypePhaseGuideline } from '../../services/types';
 
 interface PhaseGuidelinesSheetProps {
   visible: boolean;
   onClose: () => void;
   currentDay?: number;
+  surgeryTypeId?: string | null;
 }
-
-type Phase = '0-3' | '4-7' | '8-14';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.87;
 
-function getPhaseForDay(day?: number): Phase {
-  if (!day || day <= 3) return '0-3';
-  if (day <= 7) return '4-7';
-  return '8-14';
+const HIGHLIGHT_COLORS = [
+  { bg: 'bg-blue-50', text: '' },
+  { bg: 'bg-orange-50', text: '' },
+  { bg: 'bg-green-50', text: '' },
+  { bg: 'bg-purple-50', text: '' },
+  { bg: 'bg-teal-50', text: '' },
+];
+
+function getActivePhase(
+  phases: SurgeryTypePhaseGuideline[],
+  currentDay?: number,
+): SurgeryTypePhaseGuideline | null {
+  if (!phases.length) return null;
+  if (currentDay === undefined || currentDay === null) return phases[0];
+
+  // Find matching phases (where currentDay falls in range)
+  const matching = phases.filter(p => {
+    if (currentDay < p.phase_start_day) return false;
+    if (p.phase_end_day === null) return true;
+    return currentDay <= p.phase_end_day;
+  });
+
+  // Return the one with highest display_order (most advanced applicable phase)
+  if (matching.length > 0) {
+    return matching.reduce((a, b) => (a.display_order > b.display_order ? a : b));
+  }
+
+  // If currentDay is beyond all phases, return the last phase
+  return phases[phases.length - 1];
 }
 
-export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuidelinesSheetProps) {
-  const [activePhase, setActivePhase] = useState<Phase>(() => getPhaseForDay(currentDay));
+export function PhaseGuidelinesSheet({ visible, onClose, currentDay, surgeryTypeId }: PhaseGuidelinesSheetProps) {
   const [mounted, setMounted] = useState(false);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (currentDay !== undefined) {
-      setActivePhase(getPhaseForDay(currentDay));
-    }
-  }, [currentDay]);
+  const { data: phases = [], isLoading } = usePhaseGuidelines(surgeryTypeId);
+
+  const activePhase = useMemo(
+    () => getActivePhase(phases, currentDay),
+    [phases, currentDay],
+  );
 
   useEffect(() => {
     if (visible) {
@@ -64,11 +90,9 @@ export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuid
 
   if (!mounted) return null;
 
-  const phases: { id: Phase; label: string }[] = [
-    { id: '0-3', label: 'Dias 0-3' },
-    { id: '4-7', label: 'Dias 4-7' },
-    { id: '8-14', label: 'Dias 8-14' },
-  ];
+  const highlightColor = activePhase
+    ? HIGHLIGHT_COLORS[(activePhase.display_order - 1) % HIGHLIGHT_COLORS.length]
+    : HIGHLIGHT_COLORS[0];
 
   return (
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
@@ -121,117 +145,63 @@ export function PhaseGuidelinesSheet({ visible, onClose, currentDay }: PhaseGuid
           </Pressable>
         </View>
 
-        {/* Tabs - removed, showing only current phase */}
-        <View className="px-6 mb-6">
-          <View className="bg-primary-100 p-3 rounded-2xl items-center">
-            <Text style={{ fontWeight: '600', color: '#1B3A5C' }}>
-              {phases.find(p => p.id === activePhase)?.label || ''} (Fase Atual)
-            </Text>
+        {/* Current Phase Label */}
+        {activePhase && (
+          <View className="px-6 mb-6">
+            <View className="bg-primary-100 p-3 rounded-2xl items-center">
+              <Text style={{ fontWeight: '600', color: '#1B3A5C' }}>
+                {activePhase.phase_title} (Fase Atual)
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Content */}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6">
-            <View style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 24, padding: 24, overflow: 'hidden' }}>
-              {/* Left Accent Border */}
-              <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#1B3A5C', borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
+            {isLoading ? (
+              <View className="py-12 items-center">
+                <ActivityIndicator size="large" color="#1B3A5C" />
+                <Text className="text-gray-500 mt-4">Carregando orientações...</Text>
+              </View>
+            ) : !activePhase ? (
+              <View className="py-12 items-center">
+                <Text className="text-gray-500">Nenhuma orientação disponível.</Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 24, padding: 24, overflow: 'hidden' }}>
+                {/* Left Accent Border */}
+                <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 6, backgroundColor: '#1B3A5C', borderTopLeftRadius: 24, borderBottomLeftRadius: 24 }} />
 
-              {activePhase === '0-3' && (
-                <View>
-                  <Text className="text-xl font-bold text-gray-900 mb-6 pl-2">
-                    Dias 0 a 3 – Adaptação Inicial
-                  </Text>
+                <Text className="text-xl font-bold text-gray-900 mb-6 pl-2">
+                  {activePhase.phase_title}
+                </Text>
+
+                {activePhase.phase_subtitle && (
                   <Text className="text-lg italic text-gray-700 mb-8 pl-2">
-                    &quot;Seu corpo está se ajustando à cirurgia.&quot;
+                    &quot;{activePhase.phase_subtitle}&quot;
                   </Text>
-                  <View className="pl-2 mb-8">
-                    {[
-                      'Descanse, mas não fique o tempo todo deitado.',
-                      'Caminhe pequenas distâncias várias vezes ao dia.',
-                      'Dor nos ombros pode ocorrer (gás da cirurgia).',
-                      'Náuseas leves podem acontecer.',
-                    ].map((item) => (
-                      <View key={item} className="flex-row items-start mb-3">
-                        <Text className="text-gray-400 mr-3 text-lg mt-0.5">•</Text>
-                        <Text className="flex-1 text-gray-800 text-base leading-relaxed">{item}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  <View className="flex-row items-start mt-4 bg-blue-50 p-4 rounded-xl">
+                )}
+
+                <View className="pl-2 mb-8">
+                  {activePhase.items.map((item) => (
+                    <View key={item} className="flex-row items-start mb-3">
+                      <Text className="text-gray-400 mr-3 text-lg mt-0.5">•</Text>
+                      <Text className="flex-1 text-gray-800 text-base leading-relaxed">{item}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {activePhase.highlight_text && (
+                  <View className={`flex-row items-start mt-4 ${highlightColor.bg} p-4 rounded-xl`}>
                     <Text className="text-xl mr-2">👉</Text>
                     <Text className="flex-1 text-gray-800 text-base leading-relaxed">
-                      O mais importante agora é{' '}
-                      <Text className="font-bold underline">descanso</Text> ativo e{' '}
-                      <Text className="font-bold underline">observação.</Text>
+                      {activePhase.highlight_text}
                     </Text>
                   </View>
-                </View>
-              )}
-
-              {activePhase === '4-7' && (
-                <View>
-                  <Text className="text-xl font-bold text-gray-900 mb-6 pl-2">
-                    Dias 4 a 7 – Recuperação Progressiva
-                  </Text>
-                  <Text className="text-lg italic text-gray-700 mb-8 pl-2">
-                    &quot;A cada dia, você deve se sentir um pouco melhor.&quot;
-                  </Text>
-                  <View className="pl-2 mb-8">
-                    {[
-                      'A dor tende a diminuir.',
-                      'A alimentação fica mais fácil.',
-                      'A mobilidade melhora.',
-                    ].map((item) => (
-                      <View key={item} className="flex-row items-start mb-3">
-                        <Text className="text-gray-400 mr-3 text-lg mt-0.5">•</Text>
-                        <Text className="flex-1 text-gray-800 text-base leading-relaxed">{item}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  <View className="flex-row items-start mt-4 bg-orange-50 p-4 rounded-xl">
-                    <Text className="text-xl mr-2">👉</Text>
-                    <Text className="flex-1 text-gray-800 text-base leading-relaxed">
-                      Se algo estiver piorando, não ignore — avise pelo aplicativo.
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {activePhase === '8-14' && (
-                <View>
-                  <Text className="text-xl font-bold text-gray-900 mb-6 pl-2">
-                    Dias 8 a 14 – Consolidação da Recuperação
-                  </Text>
-                  <Text className="text-lg italic text-gray-700 mb-8 pl-2">
-                    &quot;Você está entrando na fase final da recuperação inicial.&quot;
-                  </Text>
-                  <View className="pl-2 mb-8">
-                    {[
-                      'Retorno gradual às atividades habituais.',
-                      'Menor necessidade de analgésicos.',
-                      'Feridas em processo de cicatrização.',
-                    ].map((item) => (
-                      <View key={item} className="flex-row items-start mb-3">
-                        <Text className="text-gray-400 mr-3 text-lg mt-0.5">•</Text>
-                        <Text className="flex-1 text-gray-800 text-base leading-relaxed">{item}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  <View className="flex-row items-start bg-green-50 p-4 rounded-xl mb-4">
-                    <Text className="text-xl mr-2">👉</Text>
-                    <Text className="flex-1 text-gray-800 text-base leading-relaxed">
-                      Este período prepara você para o retorno presencial.
-                    </Text>
-                  </View>
-                  <View className="flex-row items-start bg-blue-50 p-4 rounded-xl">
-                    <Text className="flex-1 text-blue-900 font-bold text-base leading-relaxed uppercase tracking-wider">
-                      &gt;&gt; Anote suas dúvidas para tirá-las no retorno ao seu médico
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
+                )}
+              </View>
+            )}
           </View>
         </ScrollView>
       </Animated.View>

@@ -2,16 +2,64 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react-native';
 import { PhaseGuidelinesSheet } from '../PhaseGuidelinesSheet';
 
+// Mock usePhaseGuidelines hook
+const mockPhaseData = [
+  {
+    id: '1',
+    surgery_type_id: 'st1',
+    phase_start_day: 0,
+    phase_end_day: 3,
+    phase_title: 'Dias 0 a 3 – Adaptação Inicial',
+    phase_subtitle: 'Seu corpo está se ajustando à cirurgia.',
+    items: ['Descanse bastante.', 'Caminhe pequenas distâncias.'],
+    highlight_text: 'O mais importante agora é descanso.',
+    display_order: 1,
+  },
+  {
+    id: '2',
+    surgery_type_id: 'st1',
+    phase_start_day: 4,
+    phase_end_day: 7,
+    phase_title: 'Dias 4 a 7 – Recuperação Progressiva',
+    phase_subtitle: 'A cada dia, melhora gradual.',
+    items: ['A dor tende a diminuir.', 'A alimentação fica mais fácil.'],
+    highlight_text: 'Se algo piorar, avise pelo aplicativo.',
+    display_order: 2,
+  },
+  {
+    id: '3',
+    surgery_type_id: 'st1',
+    phase_start_day: 8,
+    phase_end_day: 14,
+    phase_title: 'Dias 8 a 14 – Consolidação',
+    phase_subtitle: 'Fase final da recuperação inicial.',
+    items: ['Retorno gradual às atividades.', 'Menor necessidade de analgésicos.'],
+    highlight_text: 'Prepara você para o retorno presencial.',
+    display_order: 3,
+  },
+];
+
+jest.mock('../../../hooks/useGuidance', () => ({
+  usePhaseGuidelines: jest.fn(() => ({
+    data: mockPhaseData,
+    isLoading: false,
+  })),
+}));
+
+const { usePhaseGuidelines } = require('../../../hooks/useGuidance');
+
 describe('PhaseGuidelinesSheet', () => {
   const defaultProps = {
     visible: true,
     onClose: jest.fn(),
     currentDay: 1,
+    surgeryTypeId: 'st1',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    usePhaseGuidelines.mockReturnValue({ data: mockPhaseData, isLoading: false });
   });
 
   afterEach(() => {
@@ -34,48 +82,46 @@ describe('PhaseGuidelinesSheet', () => {
   it('deve renderizar conteúdo da fase 8-14 quando currentDay > 7', () => {
     render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 10 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('Dias 8 a 14 – Consolidação da Recuperação')).toBeTruthy();
+    expect(screen.getByText('Dias 8 a 14 – Consolidação')).toBeTruthy();
   });
 
-  it('deve renderizar fase 0-3 quando currentDay undefined', () => {
-    render(React.createElement(PhaseGuidelinesSheet, { visible: true, onClose: jest.fn() }));
+  it('deve renderizar primeira fase quando currentDay undefined', () => {
+    render(React.createElement(PhaseGuidelinesSheet, { visible: true, onClose: jest.fn(), surgeryTypeId: 'st1' }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Dias 0 a 3 – Adaptação Inicial')).toBeTruthy();
   });
 
   it('não deve renderizar quando visible false e não montado', () => {
     const { toJSON } = render(
-      React.createElement(PhaseGuidelinesSheet, { visible: false, onClose: jest.fn(), currentDay: 1 }),
+      React.createElement(PhaseGuidelinesSheet, { visible: false, onClose: jest.fn(), currentDay: 1, surgeryTypeId: 'st1' }),
     );
     act(() => { jest.runAllTimers(); });
     expect(toJSON()).toBeNull();
   });
 
-  it('deve renderizar guidelines da fase 0-3', () => {
+  it('deve renderizar items da fase ativa', () => {
     render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 1 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('Descanse, mas não fique o tempo todo deitado.')).toBeTruthy();
-    expect(screen.getByText('Caminhe pequenas distâncias várias vezes ao dia.')).toBeTruthy();
+    expect(screen.getByText('Descanse bastante.')).toBeTruthy();
+    expect(screen.getByText('Caminhe pequenas distâncias.')).toBeTruthy();
   });
 
-  it('deve renderizar guidelines da fase 4-7', () => {
+  it('deve renderizar highlight_text da fase ativa', () => {
     render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 5 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('A dor tende a diminuir.')).toBeTruthy();
-    expect(screen.getByText('A alimentação fica mais fácil.')).toBeTruthy();
+    expect(screen.getByText('Se algo piorar, avise pelo aplicativo.')).toBeTruthy();
   });
 
-  it('deve renderizar guidelines da fase 8-14', () => {
+  it('deve renderizar subtitle da fase ativa entre aspas', () => {
     render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 10 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('Retorno gradual às atividades habituais.')).toBeTruthy();
-    expect(screen.getByText('Menor necessidade de analgésicos.')).toBeTruthy();
+    expect(screen.getByText(/"Fase final da recuperação inicial."/)).toBeTruthy();
   });
 
-  it('deve mostrar fase label atual', () => {
+  it('deve mostrar label da fase atual', () => {
     render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 5 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText(/Dias 4-7 \(Fase Atual\)/)).toBeTruthy();
+    expect(screen.getByText(/Dias 4 a 7 – Recuperação Progressiva \(Fase Atual\)/)).toBeTruthy();
   });
 
   it('deve atualizar fase quando currentDay muda', () => {
@@ -87,6 +133,26 @@ describe('PhaseGuidelinesSheet', () => {
 
     rerender(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 10 }));
     act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('Dias 8 a 14 – Consolidação da Recuperação')).toBeTruthy();
+    expect(screen.getByText('Dias 8 a 14 – Consolidação')).toBeTruthy();
+  });
+
+  it('deve mostrar loading quando isLoading true', () => {
+    usePhaseGuidelines.mockReturnValue({ data: [], isLoading: true });
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Carregando orientações...')).toBeTruthy();
+  });
+
+  it('deve mostrar mensagem vazia quando não há dados', () => {
+    usePhaseGuidelines.mockReturnValue({ data: [], isLoading: false });
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Nenhuma orientação disponível.')).toBeTruthy();
+  });
+
+  it('deve usar última fase quando currentDay excede todas as fases', () => {
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps, currentDay: 30 }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Dias 8 a 14 – Consolidação')).toBeTruthy();
   });
 });

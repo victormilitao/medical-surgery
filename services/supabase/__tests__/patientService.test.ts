@@ -233,4 +233,104 @@ describe('SupabasePatientService', () => {
       })).rejects.toThrow('Já existe um paciente cadastrado com este número de telefone.');
     });
   });
+
+  describe('updatePatient', () => {
+    it('deve atualizar dados do perfil com sucesso', async () => {
+      mockRpc.mockResolvedValue({ data: null, error: null });
+
+      await service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        name: 'João Atualizado',
+        phone: '11888888888',
+        sex: 'M',
+      });
+
+      expect(mockRpc).toHaveBeenCalledWith('update_patient_profile', {
+        p_patient_id: 'p1',
+        p_full_name: 'João Atualizado',
+        p_cpf: null,
+        p_phone: '11888888888',
+        p_sex: 'M',
+      });
+    });
+
+    it('deve atualizar dados da cirurgia com sucesso', async () => {
+      const surgeryBuilder = createMockQueryBuilder(null, null);
+      mockFrom.mockReturnValue(surgeryBuilder);
+
+      await service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        surgeryDate: '2026-04-01',
+        followUpDays: 21,
+        surgeryTypeId: 'st2',
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(surgeryBuilder.update).toHaveBeenCalledWith({
+        surgery_date: '2026-04-01',
+        follow_up_days: 21,
+        surgery_type_id: 'st2',
+      });
+      expect(surgeryBuilder.eq).toHaveBeenCalledWith('id', 's1');
+    });
+
+    it('deve atualizar perfil e cirurgia juntos', async () => {
+      mockRpc.mockResolvedValue({ data: null, error: null });
+
+      const surgeryBuilder = createMockQueryBuilder(null, null);
+      mockFrom.mockReturnValue(surgeryBuilder);
+
+      await service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        name: 'Maria',
+        followUpDays: 10,
+      });
+
+      expect(mockRpc).toHaveBeenCalledWith('update_patient_profile', {
+        p_patient_id: 'p1',
+        p_full_name: 'Maria',
+        p_cpf: null,
+        p_phone: null,
+        p_sex: null,
+      });
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(surgeryBuilder.update).toHaveBeenCalledWith({ follow_up_days: 10 });
+    });
+
+    it('deve lançar erro de telefone duplicado ao atualizar', async () => {
+      mockRpc.mockResolvedValue({
+        data: null,
+        error: { code: '23505', message: 'duplicate key value violates unique constraint "profiles_phone_unique"' },
+      });
+
+      await expect(service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        phone: '85988103356',
+      })).rejects.toThrow('Já existe um paciente cadastrado com este número de telefone.');
+    });
+
+    it('deve lançar erro quando atualização da cirurgia falha', async () => {
+      const surgeryBuilder = createMockQueryBuilder(null, null);
+      const errorPromise = Promise.resolve({
+        data: null,
+        error: { message: 'Surgery update failed' },
+      });
+      surgeryBuilder.eq = jest.fn().mockReturnValue({
+        then: errorPromise.then.bind(errorPromise),
+        catch: errorPromise.catch.bind(errorPromise),
+      });
+      surgeryBuilder.update = jest.fn().mockReturnValue(surgeryBuilder);
+      mockFrom.mockReturnValue(surgeryBuilder);
+
+      await expect(service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        surgeryDate: '2026-05-01',
+      })).rejects.toEqual({ message: 'Surgery update failed' });
+    });
+  });
 });

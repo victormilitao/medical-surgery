@@ -8,7 +8,7 @@ export class SupabaseReportService implements IReportService {
     surgeryId: string,
     answers: Record<string, any>,
     questions: QuestionWithDetails[]
-  ): Promise<void> {
+  ): Promise<'critical' | 'warning' | 'stable'> {
     let criticalCount = 0;
     let nonCriticalCount = 0;
     let painLevel = 0;
@@ -141,6 +141,8 @@ export class SupabaseReportService implements IReportService {
     if (updateSurgeryError) {
       console.error('Error updating surgery status:', updateSurgeryError);
     }
+
+    return newStatus;
   }
 
   async getPatientReports(patientId: string): Promise<DailyReport[]> {

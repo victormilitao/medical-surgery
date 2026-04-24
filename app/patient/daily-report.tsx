@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { PostReportFeedbackSheet } from '../../components/patient/PostReportFeedbackSheet';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { patientService, questionService, reportService } from '../../services';
@@ -23,6 +24,8 @@ export default function DailyReportScreen() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentSurgeryTypeId, setCurrentSurgeryTypeId] = useState<string | null>(null);
   const [currentSurgeryId, setCurrentSurgeryId] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [reportStatus, setReportStatus] = useState<'critical' | 'warning' | 'stable'>('stable');
 
   useEffect(() => {
     loadData();
@@ -149,9 +152,10 @@ export default function DailyReportScreen() {
 
     try {
       setSubmitting(true);
-      await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
+      const status = await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
+      setReportStatus(status);
       showToast({ type: 'success', title: 'Sucesso', message: 'Relatório enviado com sucesso!' });
-      router.back();
+      setShowFeedback(true);
     } catch (error) {
       console.error('Error submitting report:', error);
       showToast({ type: 'error', title: 'Erro', message: 'Falha ao enviar o relatório. Tente novamente.' });
@@ -299,6 +303,16 @@ export default function DailyReportScreen() {
           )}
         </TouchableOpacity>
       </ScrollView >
+
+      <PostReportFeedbackSheet
+        visible={showFeedback}
+        onClose={() => {
+          setShowFeedback(false);
+          router.back();
+        }}
+        surgeryTypeId={currentSurgeryTypeId}
+        resultStatus={reportStatus}
+      />
     </View >
   );
 }

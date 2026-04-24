@@ -3,14 +3,15 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { StatsGrid } from '../StatsGrid';
 
 describe('StatsGrid', () => {
-  const defaultCounts = { critical: 2, warning: 3, stable: 10, finished: 5 };
+  const defaultCounts = { critical: 2, warning: 3, stable: 10, finished: 5, pendingReturn: 2 };
 
   it('deve renderizar todas as contagens', () => {
     render(React.createElement(StatsGrid, { counts: defaultCounts }));
     expect(screen.getByText('2')).toBeTruthy();
     expect(screen.getByText('3')).toBeTruthy();
     expect(screen.getByText('10')).toBeTruthy();
-    expect(screen.getByText('5')).toBeTruthy();
+    // Finalizados = finished + pendingReturn = 5 + 2 = 7
+    expect(screen.getByText('7')).toBeTruthy();
   });
 
   it('deve renderizar labels', () => {
@@ -19,6 +20,17 @@ describe('StatsGrid', () => {
     expect(screen.getByText('Atenção')).toBeTruthy();
     expect(screen.getByText('Esperado')).toBeTruthy();
     expect(screen.getByText('Finalizados')).toBeTruthy();
+  });
+
+  it('deve exibir indicador de pendência quando há pendentes', () => {
+    render(React.createElement(StatsGrid, { counts: defaultCounts }));
+    expect(screen.getByText('2 pend.')).toBeTruthy();
+  });
+
+  it('não deve exibir indicador de pendência quando pendingReturn é 0', () => {
+    const noPending = { ...defaultCounts, pendingReturn: 0 };
+    render(React.createElement(StatsGrid, { counts: noPending }));
+    expect(screen.queryByText(/pend\./)).toBeNull();
   });
 
   it('deve chamar onSelectStatus ao tocar em Crítico', () => {
@@ -93,3 +105,4 @@ describe('StatsGrid', () => {
     expect(onSelect).toHaveBeenCalledWith('critical');
   });
 });
+

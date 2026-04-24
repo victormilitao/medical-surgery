@@ -50,6 +50,18 @@ describe('PatientListItem', () => {
     expect(screen.queryByText(/Última resposta/)).toBeNull();
   });
 
+  it('deve exibir status Pendente Retorno com indicador visual', () => {
+    render(React.createElement(PatientListItem, { ...baseProps, status: 'pending_return' }));
+    expect(screen.getByText('Dia 5')).toBeTruthy();
+    expect(screen.getAllByText('Pendente Retorno').length).toBeGreaterThan(0);
+  });
+
+  it('deve exibir Pendente Retorno no rodapé e não ocultar seção de resposta', () => {
+    render(React.createElement(PatientListItem, { ...baseProps, status: 'pending_return', lastResponseDate: '2026-03-22' }));
+    expect(screen.getAllByText('Pendente Retorno').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Última resposta/)).toBeTruthy();
+  });
+
   it('deve exibir alertas quando fornecidos', () => {
     render(
       React.createElement(PatientListItem, { ...baseProps, alerts: ['Dor alta', 'Febre'] }),

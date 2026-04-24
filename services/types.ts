@@ -29,9 +29,21 @@ export interface PatientListItem {
     surgeryDate: string;
     surgeryType: string;
     day: number;
-    status: 'active' | 'completed' | 'cancelled';
+    status: 'active' | 'completed' | 'cancelled' | 'pending_return';
     lastResponseDate: string | null;
     alerts?: string[];
+}
+
+export interface UpdatePatientData {
+    patientId: string;
+    surgeryId: string;
+    name?: string;
+    cpf?: string;
+    phone?: string;
+    sex?: string;
+    surgeryDate?: string;
+    followUpDays?: number;
+    surgeryTypeId?: string;
 }
 
 export interface IPatientService {
@@ -49,6 +61,7 @@ export interface IPatientService {
         doctorId: string;
         followUpDays?: number;
     }): Promise<{ patientId: string; surgeryId: string }>;
+    updatePatient(data: UpdatePatientData): Promise<void>;
 }
 
 export interface ISurgeryService {
@@ -63,6 +76,7 @@ export interface ISurgeryService {
         followUpDays?: number;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
+    dismissPendingReturn(surgeryId: string): Promise<void>;
 }
 
 export type Question = Database['public']['Tables']['questions']['Row'];
@@ -83,7 +97,7 @@ export interface IReportService {
         surgeryId: string,
         answers: Record<string, any>,
         questions: QuestionWithDetails[]
-    ): Promise<void>;
+    ): Promise<'critical' | 'warning' | 'stable'>;
     getPatientReports(patientId: string): Promise<DailyReport[]>;
     getReportsBySurgeryId(surgeryId: string): Promise<DailyReport[]>;
     getReportById(reportId: string): Promise<DailyReport | null>;
@@ -110,4 +124,29 @@ export interface IDoctorService {
         email: string;
         password: string;
     }): Promise<{ doctorId: string }>;
+}
+
+export interface SurgeryTypeSign {
+    id: string;
+    surgery_type_id: string;
+    category: 'alert' | 'attention' | 'normal';
+    description: string;
+    display_order: number;
+}
+
+export interface SurgeryTypePhaseGuideline {
+    id: string;
+    surgery_type_id: string;
+    phase_start_day: number;
+    phase_end_day: number | null;
+    phase_title: string;
+    phase_subtitle: string | null;
+    items: string[];
+    highlight_text: string | null;
+    display_order: number;
+}
+
+export interface IGuidanceService {
+    getSignsBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypeSign[]>;
+    getPhaseGuidelinesBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypePhaseGuideline[]>;
 }

@@ -6,4 +6,5 @@ export { reportService } from './supabase/reportService';
 export { surgeryService } from './supabase/surgeryService';
 export { surgeryTypeService } from './supabase/surgeryTypeService';
 export { doctorService } from './supabase/doctorService';
+export { guidanceService } from './supabase/guidanceService';
 
