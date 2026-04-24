@@ -387,6 +387,88 @@ export type Database = {
         }
         Relationships: []
       }
+      surgery_type_signs: {
+        Row: {
+          id: string
+          surgery_type_id: string
+          category: string
+          description: string
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          surgery_type_id: string
+          category: string
+          description: string
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          surgery_type_id?: string
+          category?: string
+          description?: string
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surgery_type_signs_surgery_type_id_fkey"
+            columns: ["surgery_type_id"]
+            isOneToOne: false
+            referencedRelation: "surgery_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surgery_type_phase_guidelines: {
+        Row: {
+          id: string
+          surgery_type_id: string
+          phase_start_day: number
+          phase_end_day: number | null
+          phase_title: string
+          phase_subtitle: string | null
+          items: Json
+          highlight_text: string | null
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          surgery_type_id: string
+          phase_start_day: number
+          phase_end_day?: number | null
+          phase_title: string
+          phase_subtitle?: string | null
+          items?: Json
+          highlight_text?: string | null
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          surgery_type_id?: string
+          phase_start_day?: number
+          phase_end_day?: number | null
+          phase_title?: string
+          phase_subtitle?: string | null
+          items?: Json
+          highlight_text?: string | null
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surgery_type_phase_guidelines_surgery_type_id_fkey"
+            columns: ["surgery_type_id"]
+            isOneToOne: false
+            referencedRelation: "surgery_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

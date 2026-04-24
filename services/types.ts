@@ -97,7 +97,7 @@ export interface IReportService {
         surgeryId: string,
         answers: Record<string, any>,
         questions: QuestionWithDetails[]
-    ): Promise<void>;
+    ): Promise<'critical' | 'warning' | 'stable'>;
     getPatientReports(patientId: string): Promise<DailyReport[]>;
     getReportsBySurgeryId(surgeryId: string): Promise<DailyReport[]>;
     getReportById(reportId: string): Promise<DailyReport | null>;
@@ -124,4 +124,29 @@ export interface IDoctorService {
         email: string;
         password: string;
     }): Promise<{ doctorId: string }>;
+}
+
+export interface SurgeryTypeSign {
+    id: string;
+    surgery_type_id: string;
+    category: 'alert' | 'attention' | 'normal';
+    description: string;
+    display_order: number;
+}
+
+export interface SurgeryTypePhaseGuideline {
+    id: string;
+    surgery_type_id: string;
+    phase_start_day: number;
+    phase_end_day: number | null;
+    phase_title: string;
+    phase_subtitle: string | null;
+    items: string[];
+    highlight_text: string | null;
+    display_order: number;
+}
+
+export interface IGuidanceService {
+    getSignsBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypeSign[]>;
+    getPhaseGuidelinesBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypePhaseGuideline[]>;
 }

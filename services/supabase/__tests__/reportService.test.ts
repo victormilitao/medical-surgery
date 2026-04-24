@@ -56,9 +56,10 @@ describe('SupabaseReportService', () => {
         return updateSurgeryBuilder; // surgeries update
       });
 
-      await service.submitDailyReport('p1', 's1', { q1: '3', q2: 'no' }, baseQuestions);
+      const result = await service.submitDailyReport('p1', 's1', { q1: '3', q2: 'no' }, baseQuestions);
 
       expect(mockFrom).toHaveBeenCalledWith('daily_reports');
+      expect(result).toBe('stable');
     });
 
     it('deve criar alerta critical quando 3+ sinais críticos', async () => {
@@ -81,9 +82,10 @@ describe('SupabaseReportService', () => {
         return updateBuilder;
       });
 
-      await service.submitDailyReport('p1', 's1', { q1: '8', q2: 'yes', q3: 'yes', q4: 'yes' }, criticalQuestions);
+      const result = await service.submitDailyReport('p1', 's1', { q1: '8', q2: 'yes', q3: 'yes', q4: 'yes' }, criticalQuestions);
 
       expect(mockFrom).toHaveBeenCalledWith('alerts');
+      expect(result).toBe('critical');
     });
 
     it('deve criar alerta warning quando 3-4 sinais não-críticos', async () => {
@@ -105,10 +107,11 @@ describe('SupabaseReportService', () => {
         return updateBuilder;
       });
 
-      await service.submitDailyReport('p1', 's1', { q1: 'yes', q2: 'yes', q3: 'yes' }, warningQuestions);
+      const result = await service.submitDailyReport('p1', 's1', { q1: 'yes', q2: 'yes', q3: 'yes' }, warningQuestions);
 
       expect(mockFrom).toHaveBeenCalledWith('alerts');
       expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(result).toBe('warning');
     });
 
     it('deve tratar multiselect com opções anormais', async () => {

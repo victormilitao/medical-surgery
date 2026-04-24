@@ -236,8 +236,7 @@ describe('SupabasePatientService', () => {
 
   describe('updatePatient', () => {
     it('deve atualizar dados do perfil com sucesso', async () => {
-      const profileBuilder = createMockQueryBuilder(null, null);
-      mockFrom.mockReturnValue(profileBuilder);
+      mockRpc.mockResolvedValue({ data: null, error: null });
 
       await service.updatePatient({
         patientId: 'p1',
@@ -247,13 +246,13 @@ describe('SupabasePatientService', () => {
         sex: 'M',
       });
 
-      expect(mockFrom).toHaveBeenCalledWith('profiles');
-      expect(profileBuilder.update).toHaveBeenCalledWith({
-        full_name: 'João Atualizado',
-        phone: '11888888888',
-        sex: 'M',
+      expect(mockRpc).toHaveBeenCalledWith('update_patient_profile', {
+        p_patient_id: 'p1',
+        p_full_name: 'João Atualizado',
+        p_cpf: null,
+        p_phone: '11888888888',
+        p_sex: 'M',
       });
-      expect(profileBuilder.eq).toHaveBeenCalledWith('id', 'p1');
     });
 
     it('deve atualizar dados da cirurgia com sucesso', async () => {
@@ -278,15 +277,10 @@ describe('SupabasePatientService', () => {
     });
 
     it('deve atualizar perfil e cirurgia juntos', async () => {
-      const profileBuilder = createMockQueryBuilder(null, null);
-      const surgeryBuilder = createMockQueryBuilder(null, null);
+      mockRpc.mockResolvedValue({ data: null, error: null });
 
-      let callCount = 0;
-      mockFrom.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return profileBuilder;
-        return surgeryBuilder;
-      });
+      const surgeryBuilder = createMockQueryBuilder(null, null);
+      mockFrom.mockReturnValue(surgeryBuilder);
 
       await service.updatePatient({
         patientId: 'p1',
@@ -295,24 +289,22 @@ describe('SupabasePatientService', () => {
         followUpDays: 10,
       });
 
-      expect(mockFrom).toHaveBeenCalledTimes(2);
-      expect(profileBuilder.update).toHaveBeenCalledWith({ full_name: 'Maria' });
+      expect(mockRpc).toHaveBeenCalledWith('update_patient_profile', {
+        p_patient_id: 'p1',
+        p_full_name: 'Maria',
+        p_cpf: null,
+        p_phone: null,
+        p_sex: null,
+      });
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
       expect(surgeryBuilder.update).toHaveBeenCalledWith({ follow_up_days: 10 });
     });
 
     it('deve lançar erro de telefone duplicado ao atualizar', async () => {
-      const profileBuilder = createMockQueryBuilder(null, null);
-      // Override for error result
-      const errorPromise = Promise.resolve({
+      mockRpc.mockResolvedValue({
         data: null,
         error: { code: '23505', message: 'duplicate key value violates unique constraint "profiles_phone_unique"' },
       });
-      profileBuilder.eq = jest.fn().mockReturnValue({
-        then: errorPromise.then.bind(errorPromise),
-        catch: errorPromise.catch.bind(errorPromise),
-      });
-      profileBuilder.update = jest.fn().mockReturnValue(profileBuilder);
-      mockFrom.mockReturnValue(profileBuilder);
 
       await expect(service.updatePatient({
         patientId: 'p1',

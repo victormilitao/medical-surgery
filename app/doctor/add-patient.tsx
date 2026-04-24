@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
+import { PickerModal, PickerOption } from '../../components/ui/SearchablePickerModal';
+import { ConfirmPatientModal, ConfirmPatientData } from '../../components/doctor/ConfirmPatientModal';
+import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { patientService, surgeryTypeService } from '../../services';
@@ -43,6 +46,11 @@ export default function AddPatientScreen() {
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSurgeryPicker, setShowSurgeryPicker] = useState(false);
+  const [confirmData, setConfirmData] = useState<ConfirmPatientData | null>(null);
+  const [validatedIsoDate, setValidatedIsoDate] = useState('');
+  const [validatedFollowUpDays, setValidatedFollowUpDays] = useState(0);
 
   useEffect(() => {
     loadSurgeryTypes();
@@ -68,9 +76,19 @@ export default function AddPatientScreen() {
     }
   };
 
-  const handleSurgeryTypeChange = (typeId: string) => {
-    setSurgeryTypeId(typeId);
-    const selectedType = surgeryTypes.find((t) => t.id === typeId);
+  const pickerOptions: PickerOption[] = useMemo(
+    () => surgeryTypes.map((t) => ({ id: t.id, label: t.name })),
+    [surgeryTypes]
+  );
+
+  const selectedSurgeryName = useMemo(
+    () => surgeryTypes.find((t) => t.id === surgeryTypeId)?.name ?? '',
+    [surgeryTypes, surgeryTypeId]
+  );
+
+  const handleSurgeryTypeChange = (option: PickerOption) => {
+    setSurgeryTypeId(option.id);
+    const selectedType = surgeryTypes.find((t) => t.id === option.id);
     if (selectedType) {
       setFollowUpDays(String(selectedType.expected_recovery_days ?? 14));
     }
@@ -98,7 +116,7 @@ export default function AddPatientScreen() {
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
   };
 
-  const handleSubmit = async () => {
+  const handleValidateAndConfirm = () => {
     const cleanCpf: string = cpf.replace(/\D/g, '');
     if (!cleanCpf || cleanCpf.length !== 11) {
       showToast({ type: 'error', title: 'Erro', message: 'CPF inválido. Deve ter 11 dígitos.' });
@@ -154,29 +172,50 @@ export default function AddPatientScreen() {
     }
 
     const isoDate = `${String(year)}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const selectedType = surgeryTypes.find((t) => t.id === surgeryTypeId);
+
+    setValidatedIsoDate(isoDate);
+    setValidatedFollowUpDays(parsedFollowUpDays);
+    setConfirmData({
+      name: name.trim(),
+      cpf,
+      sex,
+      age: age.trim(),
+      phone,
+      surgeryType: selectedType?.name || '',
+      surgeryDate,
+      followUpDays,
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    if (!profile?.id) return;
 
     setLoading(true);
     try {
       await patientService.createPatient({
         name: name.trim(),
-        cpf: cleanCpf,
+        cpf: cpf.replace(/\D/g, ''),
         sex,
         age: age.trim(),
         phone: phone.replace(/\D/g, ''),
         surgeryTypeId,
-        surgeryDate: isoDate,
+        surgeryDate: validatedIsoDate,
         doctorId: profile.id,
-        followUpDays: parsedFollowUpDays,
+        followUpDays: validatedFollowUpDays,
       });
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
       queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
 
+      setShowConfirmModal(false);
       showToast({ type: 'success', title: 'Sucesso', message: 'Paciente cadastrado com sucesso!' });
       setTimeout(() => router.back(), 1500);
     } catch (error: any) {
       console.error('Error creating patient:', error);
+      setShowConfirmModal(false);
       showToast({ type: 'error', title: 'Erro', message: error?.message || 'Falha ao cadastrar paciente.' });
     } finally {
       setLoading(false);
@@ -298,29 +337,41 @@ export default function AddPatientScreen() {
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Procedimento *</Text>
             {loadingTypes ? (
-              <ActivityIndicator size="small" color="#1B3A5C" />
+              <ActivityIndicator size="small" color={AppColors.primary[700]} />
             ) : (
-              <View className="flex-row flex-wrap gap-2">
-                {surgeryTypes.map((type) => (
-                  <TouchableOpacity
-                    key={type.id}
-                    className={`py-2 px-4 rounded-xl border ${surgeryTypeId === type.id
-                      ? 'bg-primary-700 border-primary-700'
-                      : 'bg-white border-gray-300'
-                      }`}
-                    onPress={() => handleSurgeryTypeChange(type.id)}
-                  >
-                    <Text
-                      className={`font-medium ${surgeryTypeId === type.id ? 'text-white' : 'text-gray-600'
-                        }`}
-                    >
-                      {type.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <TouchableOpacity
+                testID="surgery-type-selector"
+                className={`flex-row items-center justify-between rounded-xl border px-4 ${
+                  selectedSurgeryName
+                    ? 'border-primary-700 bg-primary-50'
+                    : 'border-gray-300 bg-white'
+                }`}
+                style={{ height: 48 }}
+                onPress={() => setShowSurgeryPicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  className={`flex-1 text-base ${
+                    selectedSurgeryName ? 'font-medium text-primary-700' : 'text-gray-400'
+                  }`}
+                  numberOfLines={1}
+                >
+                  {selectedSurgeryName || 'Selecione o procedimento'}
+                </Text>
+                <ChevronDown size={20} color={AppColors.gray[400]} />
+              </TouchableOpacity>
             )}
           </View>
+
+          <PickerModal
+            visible={showSurgeryPicker}
+            onClose={() => setShowSurgeryPicker(false)}
+            onSelect={handleSurgeryTypeChange}
+            options={pickerOptions}
+            selectedId={surgeryTypeId}
+            title="Selecionar Procedimento"
+            emptyMessage="Nenhum procedimento encontrado."
+          />
 
           {/* Follow-up Days */}
           <View className="mb-4">
@@ -355,13 +406,26 @@ export default function AddPatientScreen() {
 
           {/* Submit */}
           <Button
-            title={loading ? 'Cadastrando...' : 'Cadastrar Paciente'}
-            onPress={handleSubmit}
+            title="Cadastrar Paciente"
+            onPress={handleValidateAndConfirm}
             disabled={loading}
             className="bg-primary-700 mb-10"
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Confirmation Modal */}
+      {confirmData && (
+        <ConfirmPatientModal
+          visible={showConfirmModal}
+          data={confirmData}
+          onConfirm={handleConfirmedSubmit}
+          onClose={() => setShowConfirmModal(false)}
+          isLoading={loading}
+          title="Confirmar Cadastro"
+          confirmLabel="Cadastrar"
+        />
+      )}
     </View>
   );
 }

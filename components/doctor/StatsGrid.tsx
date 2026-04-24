@@ -41,8 +41,10 @@ function StatCard({ label, count, color, isSelected, onPress, pendingCount }: St
             >
                 <Text className={`text-2xl font-bold ${countColor}`}>{count}</Text>
                 <Text className={`text-xs font-medium ${textColor} text-center`} numberOfLines={1}>{label}</Text>
-                {(pendingCount !== undefined && pendingCount > 0) && (
+                {(pendingCount !== undefined && pendingCount > 0) ? (
                     <Text className="text-orange-500 text-xs font-medium mt-0.5">{pendingCount} pend.</Text>
+                ) : (
+                    <Text className="text-transparent text-xs font-medium mt-0.5">{' '}</Text>
                 )}
             </View>
         </TouchableOpacity>

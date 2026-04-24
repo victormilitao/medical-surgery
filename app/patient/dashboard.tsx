@@ -163,6 +163,7 @@ export default function PatientDashboard() {
                 visible={isGuidelinesVisible}
                 onClose={() => setIsGuidelinesVisible(false)}
                 currentDay={currentDay}
+                surgeryTypeId={dashboardData?.currentSurgery?.surgery_type_id}
             />
         </View>
     );

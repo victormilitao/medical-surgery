@@ -12,6 +12,25 @@ import { useToast } from '../../../context/ToastContext';
 import { patientService, questionService, reportService } from '../../../services';
 import { DailyReport, QuestionWithDetails } from '../../../services/types';
 
+/**
+ * Parse alert message into individual items.
+ * Alert messages often come as: "3 sinais críticos detectados. Detalhes: Febre: Sim, Náuseas: Sim"
+ * We split on "Detalhes:" and then split the details by comma.
+ */
+function parseAlertDetails(message: string): { summary: string; items: string[] } {
+  const detailsIndex: number = message.indexOf('Detalhes:');
+  if (detailsIndex === -1) {
+    return { summary: message, items: [] };
+  }
+  const summary: string = message.substring(0, detailsIndex).trim();
+  const detailsStr: string = message.substring(detailsIndex + 'Detalhes:'.length).trim();
+  const items: string[] = detailsStr
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  return { summary, items };
+}
+
 export default function ReportHistoryScreen() {
   const { reportId } = useLocalSearchParams();
   const router = useRouter();
@@ -126,21 +145,22 @@ export default function ReportHistoryScreen() {
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
         {/* Status Badge */}
-        <View className={`mb-6 p-4 rounded-xl border flex-row items-start ${hasCriticalAlert ? 'bg-red-50 border-red-200' :
+        <View className={`mb-6 p-4 rounded-xl border ${hasCriticalAlert ? 'bg-red-50 border-red-200' :
           hasWarningAlert ? 'bg-yellow-50 border-yellow-200' :
             'bg-green-50 border-green-200'
           }`}>
-          <View className={`mt-0.5 p-2 rounded-full mr-3 ${hasCriticalAlert ? 'bg-red-100' :
-            hasWarningAlert ? 'bg-yellow-100' :
-              'bg-green-100'
-            }`}>
-            {hasCriticalAlert ? <AlertCircle size={20} color="#DC2626" /> :
-              hasWarningAlert ? <AlertTriangle size={20} color="#D97706" /> :
-                <CheckCircle size={20} color="#16A34A" />
-            }
-          </View>
-          <View className="flex-1">
-            <Text className={`font-bold text-lg mb-1 ${hasCriticalAlert ? 'text-red-800' :
+          {/* Icon + Title row */}
+          <View className="flex-row items-center mb-2">
+            <View className={`p-2 rounded-full mr-3 ${hasCriticalAlert ? 'bg-red-100' :
+              hasWarningAlert ? 'bg-yellow-100' :
+                'bg-green-100'
+              }`}>
+              {hasCriticalAlert ? <AlertCircle size={20} color="#DC2626" /> :
+                hasWarningAlert ? <AlertTriangle size={20} color="#D97706" /> :
+                  <CheckCircle size={20} color="#16A34A" />
+              }
+            </View>
+            <Text className={`font-bold text-lg ${hasCriticalAlert ? 'text-red-800' :
               hasWarningAlert ? 'text-yellow-800' :
                 'text-green-800'
               }`}>
@@ -148,22 +168,37 @@ export default function ReportHistoryScreen() {
                 hasWarningAlert ? 'Atenção Necessária' :
                   'Recuperação dentro do esperado'}
             </Text>
-
-            {report.alerts && report.alerts.length > 0 ? (
-              <View className="mt-2">
-                <Text className="font-medium text-gray-700 mb-1">Pontos de atenção:</Text>
-                {report.alerts.map((alert, idx) => (
-                  <Text key={idx} className="text-gray-600 text-sm leading-5">
-                    • {alert.message}
-                  </Text>
-                ))}
-              </View>
-            ) : (
-              <Text className="text-gray-600 text-sm">
-                Nenhum sinal de alerta reportado neste dia.
-              </Text>
-            )}
           </View>
+
+          {/* Alert details — full width below */}
+          {report.alerts && report.alerts.length > 0 ? (
+            <View className="mt-1">
+              {report.alerts.map((alert, idx) => {
+                const parsed = parseAlertDetails(alert.message);
+                return (
+                  <View key={idx} className="mb-3">
+                    {parsed.summary ? (
+                      <Text className="text-gray-700 font-medium text-sm mb-1">{parsed.summary}</Text>
+                    ) : null}
+                    {parsed.items.length > 0 ? (
+                      parsed.items.map((item, i) => (
+                        <View key={i} className="flex-row items-start mb-0.5">
+                          <Text className={`mr-1.5 mt-0.5 ${hasCriticalAlert ? 'text-red-500' : hasWarningAlert ? 'text-yellow-500' : 'text-green-500'}`}>•</Text>
+                          <Text className="text-gray-600 text-sm flex-1">{item}</Text>
+                        </View>
+                      ))
+                    ) : (
+                      <Text className="text-gray-600 text-sm">• {alert.message}</Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text className="text-gray-600 text-sm">
+              Nenhum sinal de alerta reportado neste dia.
+            </Text>
+          )}
         </View>
 
         <Text className="text-gray-900 font-bold text-lg mb-4">Respostas enviadas</Text>
