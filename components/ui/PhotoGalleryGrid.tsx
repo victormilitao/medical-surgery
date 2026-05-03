@@ -1,5 +1,5 @@
 import { Image as ExpoImage } from 'expo-image';
-import { ChevronLeft, ChevronRight, ImageOff, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, ImageOff, Pencil, Plus, Trash2, X } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -23,6 +23,7 @@ const GRID_GAP = 8;
 const GRID_PADDING = 16;
 const COLUMN_COUNT = 2;
 const ITEM_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / COLUMN_COUNT;
+const COMPACT_ADD_SIZE = ITEM_WIDTH * 0.55;
 const MAX_PHOTOS_PER_DAY = 2;
 
 interface PhotoGalleryGridProps {
@@ -168,7 +169,7 @@ export function PhotoGalleryGrid({
     return (
         <View className="flex-1">
             <ScrollView
-                contentContainerStyle={{ padding: GRID_PADDING }}
+                contentContainerStyle={{ padding: GRID_PADDING, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
                 {sections.map((section) => {
@@ -176,53 +177,72 @@ export function PhotoGalleryGrid({
 
                     return (
                         <View key={section.date} className="mb-4">
-                            {/* Date header com botão de adicionar à direita */}
-                            <View className="flex-row items-center justify-between mb-2">
+                            {/* Date header */}
+                            <View className="mb-2">
                                 <Text
                                     className="text-base font-semibold"
                                     style={{ color: AppColors.gray[600] }}
                                 >
                                     {section.formattedDate}
                                 </Text>
-
-                                {canAddToDay && (
-                                    <TouchableOpacity
-                                        testID={`add-photo-day-${section.date}`}
-                                        onPress={() => onAddPhoto!(section.date)}
-                                        disabled={isUploading}
-                                        activeOpacity={0.7}
-                                        className="rounded-lg items-center justify-center"
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            backgroundColor: AppColors.gray[100],
-                                        }}
-                                    >
-                                        {isUploading ? (
-                                            <ActivityIndicator size="small" color={AppColors.primary[700]} />
-                                        ) : (
-                                            <ImagePlus size={16} color={AppColors.primary[600]} />
-                                        )}
-                                    </TouchableOpacity>
-                                )}
                             </View>
 
-                            {/* Photo grid */}
-                            {section.photos.length > 0 && (
-                                <View className="flex-row flex-wrap" style={{ gap: GRID_GAP }}>
-                                    {section.photos.map((photo) => (
-                                        <PhotoThumbnail
-                                            key={photo.id}
-                                            photo={photo}
-                                            canDelete={canDeletePhotos}
-                                            canReplace={canReplacePhotos}
-                                            onPress={handlePhotoPress}
-                                            onDelete={onDeletePhoto}
-                                            onReplace={onReplacePhoto}
-                                        />
-                                    ))}
-                                </View>
-                            )}
+                            {/* Photo grid with inline add tile */}
+                            <View className="flex-row flex-wrap" style={{ gap: GRID_GAP }}>
+                                {section.photos.map((photo) => (
+                                    <PhotoThumbnail
+                                        key={photo.id}
+                                        photo={photo}
+                                        canDelete={canDeletePhotos}
+                                        canReplace={canReplacePhotos}
+                                        onPress={handlePhotoPress}
+                                        onDelete={onDeletePhoto}
+                                        onReplace={onReplacePhoto}
+                                    />
+                                ))}
+
+                                {/* Add photo tile — compact when no photos, full size when alongside photos */}
+                                {canAddToDay && (() => {
+                                    const isEmpty = section.photos.length === 0;
+                                    const tileSize = isEmpty ? COMPACT_ADD_SIZE : ITEM_WIDTH;
+                                    return (
+                                        <TouchableOpacity
+                                            testID={`add-photo-day-${section.date}`}
+                                            onPress={() => onAddPhoto!(section.date)}
+                                            disabled={isUploading}
+                                            activeOpacity={0.7}
+                                            className="rounded-xl items-center justify-center"
+                                            style={{
+                                                width: tileSize,
+                                                height: tileSize,
+                                                borderWidth: 2,
+                                                borderStyle: 'dashed',
+                                                borderColor: AppColors.primary[300],
+                                                backgroundColor: AppColors.white,
+                                            }}
+                                        >
+                                            {isUploading ? (
+                                                <ActivityIndicator size="small" color={AppColors.primary[700]} />
+                                            ) : (
+                                                <View className="items-center">
+                                                    <View
+                                                        className="w-10 h-10 rounded-full items-center justify-center mb-1"
+                                                        style={{ backgroundColor: AppColors.primary[50] }}
+                                                    >
+                                                        <Plus size={18} color={AppColors.primary[600]} />
+                                                    </View>
+                                                    <Text
+                                                        className="text-xs font-medium"
+                                                        style={{ color: AppColors.primary[600] }}
+                                                    >
+                                                        Adicionar
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })()}
+                            </View>
                         </View>
                     );
                 })}
